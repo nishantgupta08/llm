@@ -655,7 +655,7 @@ def display_interactive_parameters_table(params_list, title, sidebar=True):
 
 def display_compact_widgets_table(params_list, title, sidebar=True):
     """
-    Display parameters in a table format with widgets embedded inside table cells.
+    Display parameters in a table-like format with widgets embedded in cells using Streamlit columns.
     
     Args:
         params_list: List of parameter objects
@@ -671,45 +671,75 @@ def display_compact_widgets_table(params_list, title, sidebar=True):
     else:
         st.subheader(f"📋 {title}")
     
-    # Create a styled table with borders
+    # Create a styled container for table-like appearance
     st.markdown("""
     <style>
-    .param-table {
-        border-collapse: collapse;
-        width: 100%;
-        margin: 10px 0;
-    }
-    .param-table th, .param-table td {
+    .param-table-container {
         border: 1px solid #ddd;
-        padding: 8px;
-        text-align: left;
-    }
-    .param-table th {
-        background-color: #f2f2f2;
-        font-weight: bold;
-    }
-    .param-table tr:nth-child(even) {
+        border-radius: 5px;
+        margin: 10px 0;
         background-color: #f9f9f9;
     }
-    .param-table tr:hover {
+    .param-table-header {
+        background-color: #f2f2f2;
+        padding: 10px;
+        border-bottom: 1px solid #ddd;
+        font-weight: bold;
+    }
+    .param-table-row {
+        border-bottom: 1px solid #ddd;
+        padding: 8px;
+    }
+    .param-table-row:last-child {
+        border-bottom: none;
+    }
+    .param-table-row:nth-child(even) {
+        background-color: #ffffff;
+    }
+    .param-table-row:hover {
         background-color: #f5f5f5;
+    }
+    .param-label {
+        font-weight: bold;
+        color: #333;
+    }
+    .param-info {
+        font-size: 0.8em;
+        color: #666;
+        margin-top: 2px;
+    }
+    .param-type {
+        background-color: #e9ecef;
+        padding: 2px 6px;
+        border-radius: 3px;
+        font-size: 0.8em;
+        color: #495057;
+    }
+    .param-range {
+        background-color: #e9ecef;
+        padding: 2px 6px;
+        border-radius: 3px;
+        font-size: 0.8em;
+        color: #495057;
     }
     </style>
     """, unsafe_allow_html=True)
     
-    # Create table header
-    st.markdown("""
-    <table class="param-table">
-        <thead>
-            <tr>
-                <th>Parameter</th>
-                <th>Type</th>
-                <th>Range</th>
-                <th>Control</th>
-            </tr>
-        </thead>
-        <tbody>
-    """, unsafe_allow_html=True)
+    # Create table-like container
+    st.markdown('<div class="param-table-container">', unsafe_allow_html=True)
+    
+    # Create header row
+    st.markdown('<div class="param-table-header">', unsafe_allow_html=True)
+    col1, col2, col3, col4 = st.columns([2, 1, 1, 2])
+    with col1:
+        st.markdown("**Parameter**")
+    with col2:
+        st.markdown("**Type**")
+    with col3:
+        st.markdown("**Range**")
+    with col4:
+        st.markdown("**Control**")
+    st.markdown('</div>', unsafe_allow_html=True)
     
     params = {}
     for i, param in enumerate(params_list):
@@ -722,96 +752,102 @@ def display_compact_widgets_table(params_list, title, sidebar=True):
             range_str = "N/A"
         
         # Create table row
-        st.markdown(f"""
-        <tr>
-            <td><strong>{param.label}</strong><br><small>{param.info[:50]}{'...' if len(param.info) > 50 else ''}</small></td>
-            <td><code>{param.type.value}</code></td>
-            <td><code>{range_str}</code></td>
-            <td>
-        """, unsafe_allow_html=True)
+        st.markdown(f'<div class="param-table-row">', unsafe_allow_html=True)
+        col1, col2, col3, col4 = st.columns([2, 1, 1, 2])
         
-        # Create widget in the table cell
-        key = f"{title.lower().replace(' ', '_')}_{param.name}_{i}"
+        with col1:
+            st.markdown(f'<div class="param-label">{param.label}</div>', unsafe_allow_html=True)
+            if param.info:
+                st.markdown(f'<div class="param-info">{param.info[:50]}{"..." if len(param.info) > 50 else ""}</div>', unsafe_allow_html=True)
         
-        # Create widget based on parameter type
-        if param.type == InputType.DROPDOWN:
-            widget = st.selectbox(
-                "Value",
-                options=param.options,
-                index=param.options.index(param.ideal) if param.ideal in param.options else 0,
-                help=f"{param.info} 💡 {param.ideal_value_reason}" if param.ideal_value_reason else param.info,
-                key=key,
-                label_visibility="collapsed"
-            )
-        elif param.type == InputType.CHECKBOX:
-            widget = st.checkbox(
-                "Value",
-                value=param.ideal,
-                help=f"{param.info} 💡 {param.ideal_value_reason}" if param.ideal_value_reason else param.info,
-                key=key,
-                label_visibility="collapsed"
-            )
-        elif param.type == InputType.NUMBER:
-            # Handle different parameter types
-            if hasattr(param, 'min_value'):
-                if param.value_type == ValueType.FLOAT:
-                    min_val, max_val, ideal_val, step = float(param.min_value), float(param.max_value), float(param.ideal), 0.01
+        with col2:
+            st.markdown(f'<div class="param-type">{param.type.value}</div>', unsafe_allow_html=True)
+        
+        with col3:
+            st.markdown(f'<div class="param-range">{range_str}</div>', unsafe_allow_html=True)
+        
+        with col4:
+            # Create widget in the table cell
+            key = f"{title.lower().replace(' ', '_')}_{param.name}_{i}"
+            
+            # Create widget based on parameter type
+            if param.type == InputType.DROPDOWN:
+                widget = st.selectbox(
+                    "Value",
+                    options=param.options,
+                    index=param.options.index(param.ideal) if param.ideal in param.options else 0,
+                    help=f"{param.info} 💡 {param.ideal_value_reason}" if param.ideal_value_reason else param.info,
+                    key=key,
+                    label_visibility="collapsed"
+                )
+            elif param.type == InputType.CHECKBOX:
+                widget = st.checkbox(
+                    "Value",
+                    value=param.ideal,
+                    help=f"{param.info} 💡 {param.ideal_value_reason}" if param.ideal_value_reason else param.info,
+                    key=key,
+                    label_visibility="collapsed"
+                )
+            elif param.type == InputType.NUMBER:
+                # Handle different parameter types
+                if hasattr(param, 'min_value'):
+                    if param.value_type == ValueType.FLOAT:
+                        min_val, max_val, ideal_val, step = float(param.min_value), float(param.max_value), float(param.ideal), 0.01
+                    else:
+                        min_val, max_val, ideal_val, step = int(param.min_value), int(param.max_value), int(param.ideal), 1
                 else:
-                    min_val, max_val, ideal_val, step = int(param.min_value), int(param.max_value), int(param.ideal), 1
+                    if param.value_type == ValueType.FLOAT:
+                        min_val, max_val, ideal_val, step = float(param.min), float(param.max), float(param.ideal), 0.01
+                    else:
+                        min_val, max_val, ideal_val, step = int(param.min), int(param.max), int(param.ideal), 1
+                
+                if hasattr(param, 'step') and param.step:
+                    step = param.step
+                
+                widget = st.number_input(
+                    "Value",
+                    min_value=min_val,
+                    max_value=max_val,
+                    value=ideal_val,
+                    step=step,
+                    help=f"{param.info} 💡 {param.ideal_value_reason}" if param.ideal_value_reason else param.info,
+                    key=key,
+                    label_visibility="collapsed"
+                )
+            elif param.type == InputType.SLIDER:
+                # Handle different parameter types
+                if hasattr(param, 'min_value'):
+                    if param.value_type == ValueType.FLOAT:
+                        min_val, max_val, ideal_val, step = float(param.min_value), float(param.max_value), float(param.ideal), 0.01
+                    else:
+                        min_val, max_val, ideal_val, step = int(param.min_value), int(param.max_value), int(param.ideal), 1
+                else:
+                    if param.value_type == ValueType.FLOAT:
+                        min_val, max_val, ideal_val, step = float(param.min), float(param.max), float(param.ideal), 0.01
+                    else:
+                        min_val, max_val, ideal_val, step = int(param.min), int(param.max), int(param.ideal), 1
+                
+                if hasattr(param, 'step') and param.step:
+                    step = param.step
+                
+                widget = st.slider(
+                    "Value",
+                    min_value=min_val,
+                    max_value=max_val,
+                    value=ideal_val,
+                    step=step,
+                    help=f"{param.info} 💡 {param.ideal_value_reason}" if param.ideal_value_reason else param.info,
+                    key=key,
+                    label_visibility="collapsed"
+                )
             else:
-                if param.value_type == ValueType.FLOAT:
-                    min_val, max_val, ideal_val, step = float(param.min), float(param.max), float(param.ideal), 0.01
-                else:
-                    min_val, max_val, ideal_val, step = int(param.min), int(param.max), int(param.ideal), 1
+                continue
             
-            if hasattr(param, 'step') and param.step:
-                step = param.step
-            
-            widget = st.number_input(
-                "Value",
-                min_value=min_val,
-                max_value=max_val,
-                value=ideal_val,
-                step=step,
-                help=f"{param.info} 💡 {param.ideal_value_reason}" if param.ideal_value_reason else param.info,
-                key=key,
-                label_visibility="collapsed"
-            )
-        elif param.type == InputType.SLIDER:
-            # Handle different parameter types
-            if hasattr(param, 'min_value'):
-                if param.value_type == ValueType.FLOAT:
-                    min_val, max_val, ideal_val, step = float(param.min_value), float(param.max_value), float(param.ideal), 0.01
-                else:
-                    min_val, max_val, ideal_val, step = int(param.min_value), int(param.max_value), int(param.ideal), 1
-            else:
-                if param.value_type == ValueType.FLOAT:
-                    min_val, max_val, ideal_val, step = float(param.min), float(param.max), float(param.ideal), 0.01
-                else:
-                    min_val, max_val, ideal_val, step = int(param.min), int(param.max), int(param.ideal), 1
-            
-            if hasattr(param, 'step') and param.step:
-                step = param.step
-            
-            widget = st.slider(
-                "Value",
-                min_value=min_val,
-                max_value=max_val,
-                value=ideal_val,
-                step=step,
-                help=f"{param.info} 💡 {param.ideal_value_reason}" if param.ideal_value_reason else param.info,
-                key=key,
-                label_visibility="collapsed"
-            )
-        else:
-            continue
+            params[param.name] = widget
         
-        params[param.name] = widget
-        
-        # Close table row
-        st.markdown("</td></tr>", unsafe_allow_html=True)
+        st.markdown('</div>', unsafe_allow_html=True)
     
-    # Close table
-    st.markdown("</tbody></table>", unsafe_allow_html=True)
+    # Close table container
+    st.markdown('</div>', unsafe_allow_html=True)
     
     return params
