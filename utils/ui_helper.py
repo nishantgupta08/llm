@@ -688,7 +688,10 @@ def display_compact_widgets_table(params_list, title, sidebar=True):
     }
     .param-table-row {
         border-bottom: 1px solid #ddd;
-        padding: 8px;
+        padding: 12px;
+        min-height: 60px;
+        display: flex;
+        align-items: center;
     }
     .param-table-row:last-child {
         border-bottom: none;
@@ -702,25 +705,19 @@ def display_compact_widgets_table(params_list, title, sidebar=True):
     .param-label {
         font-weight: bold;
         color: #333;
+        margin-bottom: 4px;
     }
-    .param-info {
+    .param-hint {
         font-size: 0.8em;
         color: #666;
-        margin-top: 2px;
+        font-style: italic;
+        line-height: 1.3;
     }
-    .param-type {
-        background-color: #e9ecef;
-        padding: 2px 6px;
-        border-radius: 3px;
+    .param-reason {
         font-size: 0.8em;
-        color: #495057;
-    }
-    .param-range {
-        background-color: #e9ecef;
-        padding: 2px 6px;
-        border-radius: 3px;
-        font-size: 0.8em;
-        color: #495057;
+        color: #28a745;
+        font-weight: 500;
+        line-height: 1.3;
     }
     </style>
     """, unsafe_allow_html=True)
@@ -730,41 +727,45 @@ def display_compact_widgets_table(params_list, title, sidebar=True):
     
     # Create header row
     st.markdown('<div class="param-table-header">', unsafe_allow_html=True)
-    col1, col2, col3, col4 = st.columns([2, 1, 1, 2])
+    col1, col2, col3, col4 = st.columns([2, 2, 2, 2])
     with col1:
         st.markdown("**Parameter**")
     with col2:
-        st.markdown("**Type**")
+        st.markdown("**Hint**")
     with col3:
-        st.markdown("**Range**")
+        st.markdown("**Ideal Value Reason**")
     with col4:
         st.markdown("**Control**")
     st.markdown('</div>', unsafe_allow_html=True)
     
     params = {}
     for i, param in enumerate(params_list):
-        # Handle different parameter types for range
-        if hasattr(param, 'min_value'):
-            range_str = f"{param.min_value}-{param.max_value}" if param.min_value and param.max_value else "N/A"
-        elif hasattr(param, 'min'):
-            range_str = f"{param.min}-{param.max}" if param.min is not None and param.max is not None else "N/A"
-        else:
-            range_str = "N/A"
-        
         # Create table row
         st.markdown(f'<div class="param-table-row">', unsafe_allow_html=True)
-        col1, col2, col3, col4 = st.columns([2, 1, 1, 2])
+        col1, col2, col3, col4 = st.columns([2, 2, 2, 2])
         
         with col1:
             st.markdown(f'<div class="param-label">{param.label}</div>', unsafe_allow_html=True)
-            if param.info:
-                st.markdown(f'<div class="param-info">{param.info[:50]}{"..." if len(param.info) > 50 else ""}</div>', unsafe_allow_html=True)
         
         with col2:
-            st.markdown(f'<div class="param-type">{param.type.value}</div>', unsafe_allow_html=True)
+            # Display hint information (general info)
+            hint_text = ""
+            if param.info and not param.ideal_value_reason:
+                hint_text = param.info[:80] + "..." if len(param.info) > 80 else param.info
+            elif param.info:
+                hint_text = param.info[:80] + "..." if len(param.info) > 80 else param.info
+            
+            if hint_text:
+                st.markdown(f'<div class="param-hint">{hint_text}</div>', unsafe_allow_html=True)
+            else:
+                st.markdown('<div class="param-hint">No hint available</div>', unsafe_allow_html=True)
         
         with col3:
-            st.markdown(f'<div class="param-range">{range_str}</div>', unsafe_allow_html=True)
+            # Display ideal value reason
+            if param.ideal_value_reason:
+                st.markdown(f'<div class="param-reason">💡 {param.ideal_value_reason}</div>', unsafe_allow_html=True)
+            else:
+                st.markdown('<div class="param-reason">No reason specified</div>', unsafe_allow_html=True)
         
         with col4:
             # Create widget in the table cell
