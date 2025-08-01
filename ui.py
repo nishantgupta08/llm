@@ -5,12 +5,12 @@ from models_config import (
     ENCODER_DECODER_MODELS
 )
 from strategies.preprocessing_strategies import TASK_PREPROCESSING_PARAMS
+from strategies.encoding_strategies import TASK_ENCODING_PARAMS
 from utils.ui_helper import (
-    display_compact_widgets_table,
+    render_param_group,
     model_table_selection
 )
 
-# --- Config: define what widgets to show for each task ---
 TASK_CONFIG = {
     "RAG-based QA": {
         "preprocessing": True,
@@ -29,55 +29,46 @@ TASK_CONFIG = {
         "encoder": False,
         "decoder": False,
         "encoder_decoder": True,
-    },
-    "Custom Task": {
-        "preprocessing": False,
-        "encoder": True,
-        "decoder": True,
-        "encoder_decoder": True,
     }
 }
 
 st.set_page_config(page_title="🧠 GenAI Playground", layout="wide")
 st.title("🧠 GenAI Playground")
 
-# Task selection
 task = st.radio("Choose task:", list(TASK_CONFIG.keys()))
 cfg = TASK_CONFIG[task]
-
 user_params = {}
 
-# Preprocessing parameters
+# Preprocessing parameters (if any)
 if cfg.get("preprocessing"):
     preprocessing_params_list = TASK_PREPROCESSING_PARAMS.get(task, [])
     if preprocessing_params_list:
-        with st.expander("⚙️ Preprocessing Parameters", expanded=True):
-            user_params["preprocessing"] = display_compact_widgets_table(
-                preprocessing_params_list, "Preprocessing Parameters"
-            )
+        user_params["preprocessing"] = render_param_group(
+            preprocessing_params_list, "Preprocessing Parameters", key_prefix="pre", sidebar=False
+        )
 
-# Encoder model selection
+# Encoder model selection (AgGrid interactive)
 if cfg.get("encoder"):
-    with st.expander("🤖 Encoder Model Selection", expanded=True):
-        user_params["encoder"] = model_table_selection(
-            "Encoder Model", ENCODER_ONLY_MODELS, task, prefix="encoder"
-        )
+    encoder_obj = model_table_selection("Encoder Model", ENCODER_ONLY_MODELS, prefix="encoder")
+    user_params["encoder"] = encoder_obj.name if encoder_obj else None
 
-# Decoder model selection
+# Decoder model selection (AgGrid interactive)
 if cfg.get("decoder"):
-    with st.expander("🤖 Decoder Model Selection", expanded=True):
-        user_params["decoder"] = model_table_selection(
-            "Decoder Model", DECODER_ONLY_MODELS, task, prefix="decoder"
-        )
+    decoder_obj = model_table_selection("Decoder Model", DECODER_ONLY_MODELS, prefix="decoder")
+    user_params["decoder"] = decoder_obj.name if decoder_obj else None
 
-# Encoder-Decoder model selection
+# Encoder-Decoder model selection (AgGrid interactive)
 if cfg.get("encoder_decoder"):
-    with st.expander("🤖 Encoder-Decoder Model Selection", expanded=True):
-        user_params["encoder_decoder"] = model_table_selection(
-            "Encoder-Decoder Model", ENCODER_DECODER_MODELS, task, prefix="encdec"
-        )
+    encdec_obj = model_table_selection("Encoder-Decoder Model", ENCODER_DECODER_MODELS, prefix="encdec")
+    user_params["encoder_decoder"] = encdec_obj.name if encdec_obj else None
+
+# Encoding parameters (example)
+if TASK_ENCODING_PARAMS.get(task):
+    user_params["encoding"] = render_param_group(
+        TASK_ENCODING_PARAMS[task], "Encoding Parameters", key_prefix="enc", sidebar=False
+    )
 
 # Submit button
 if st.button("🚀 Run Task", type="primary"):
-    st.success("Selections submitted:")
+    st.success("Your selections:")
     st.json(user_params)
