@@ -376,11 +376,21 @@ def display_parameters_table(params_list, title, sidebar=True):
     # Create a DataFrame for display
     table_data = []
     for param in params_list:
+        # Handle different parameter types (EncodingParam vs DecodingParam)
+        if hasattr(param, 'min_value'):
+            # EncodingParam uses min_value, max_value
+            range_str = f"{param.min_value}-{param.max_value}" if param.min_value and param.max_value else "N/A"
+        elif hasattr(param, 'min'):
+            # DecodingParam uses min, max
+            range_str = f"{param.min}-{param.max}" if param.min is not None and param.max is not None else "N/A"
+        else:
+            range_str = "N/A"
+        
         table_data.append({
             "Parameter": param.label,
             "Type": param.type.value,
             "Value": str(param.ideal),
-            "Range": param.range if hasattr(param, 'range') else f"{param.min_value}-{param.max_value}" if param.min_value and param.max_value else "N/A",
+            "Range": param.range if hasattr(param, 'range') and param.range else range_str,
             "Info": param.info[:50] + "..." if len(param.info) > 50 else param.info
         })
     
@@ -415,12 +425,21 @@ def display_parameters_table(params_list, title, sidebar=True):
                 key=key
             )
         elif param.type == InputType.NUMBER:
-            if param.value_type == ValueType.FLOAT:
-                min_val, max_val, ideal_val, step = float(param.min_value), float(param.max_value), float(param.ideal), 0.01
+            # Handle different parameter types
+            if hasattr(param, 'min_value'):
+                # EncodingParam
+                if param.value_type == ValueType.FLOAT:
+                    min_val, max_val, ideal_val, step = float(param.min_value), float(param.max_value), float(param.ideal), 0.01
+                else:
+                    min_val, max_val, ideal_val, step = int(param.min_value), int(param.max_value), int(param.ideal), 1
             else:
-                min_val, max_val, ideal_val, step = int(param.min_value), int(param.max_value), int(param.ideal), 1
+                # DecodingParam
+                if param.value_type == ValueType.FLOAT:
+                    min_val, max_val, ideal_val, step = float(param.min), float(param.max), float(param.ideal), 0.01
+                else:
+                    min_val, max_val, ideal_val, step = int(param.min), int(param.max), int(param.ideal), 1
             
-            if param.step:
+            if hasattr(param, 'step') and param.step:
                 step = param.step
             
             widget = st.sidebar.number_input(
@@ -433,12 +452,21 @@ def display_parameters_table(params_list, title, sidebar=True):
                 key=key
             )
         elif param.type == InputType.SLIDER:
-            if param.value_type == ValueType.FLOAT:
-                min_val, max_val, ideal_val, step = float(param.min_value), float(param.max_value), float(param.ideal), 0.01
+            # Handle different parameter types
+            if hasattr(param, 'min_value'):
+                # EncodingParam
+                if param.value_type == ValueType.FLOAT:
+                    min_val, max_val, ideal_val, step = float(param.min_value), float(param.max_value), float(param.ideal), 0.01
+                else:
+                    min_val, max_val, ideal_val, step = int(param.min_value), int(param.max_value), int(param.ideal), 1
             else:
-                min_val, max_val, ideal_val, step = int(param.min_value), int(param.max_value), int(param.ideal), 1
+                # DecodingParam
+                if param.value_type == ValueType.FLOAT:
+                    min_val, max_val, ideal_val, step = float(param.min), float(param.max), float(param.ideal), 0.01
+                else:
+                    min_val, max_val, ideal_val, step = int(param.min), int(param.max), int(param.ideal), 1
             
-            if param.step:
+            if hasattr(param, 'step') and param.step:
                 step = param.step
             
             widget = st.sidebar.slider(
