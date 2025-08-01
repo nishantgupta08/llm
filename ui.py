@@ -33,69 +33,13 @@ orchestrator = TaskOrchestrator(models)
 # Create two-column layout
 col_left, col_right = st.columns([1, 3])
 
-# Left side - Task selection and model statistics
+# Left side - Task selection
 with col_left:
     st.header("🎯 Task Selection")
     task = st.radio("Choose task:", ["Normal QA", "RAG-based QA", "Summarisation"])
-    
-    # Model statistics
-    with st.expander("📊 Model Statistics", expanded=False):
-        st.write(f"🔍 Model Counts:")
-        st.write(f"  - Encoder models: {len(ENCODER_ONLY_MODELS)}")
-        st.write(f"  - Decoder models: {len(DECODER_ONLY_MODELS)}")
-        st.write(f"  - Encoder-Decoder models: {len(ENCODER_DECODER_MODELS)}")
 
 # Right side - Main content
 with col_right:
-    # Demo section to showcase interactive grid approach
-    with st.expander("🎨 Interactive Grid Demo", expanded=False):
-        st.markdown("### Interactive table with embedded widgets:")
-        
-        # Demo parameters
-        demo_params = [
-            {"name": "temperature", "label": "Temperature", "type": "slider", "value": 0.7, "range": "0.0-1.5"},
-            {"name": "top_k", "label": "Top-K", "type": "number", "value": 50, "range": "0-100"},
-            {"name": "pooling", "label": "Pooling", "type": "dropdown", "value": "mean", "options": ["mean", "max", "cls"]},
-            {"name": "normalize", "label": "Normalize", "type": "checkbox", "value": True}
-        ]
-        
-        st.markdown("**Interactive Grid Approach:** Widgets embedded directly in table cells")
-        
-        # Create table header
-        col1, col2, col3, col4 = st.columns([2, 1, 1, 2])
-        with col1:
-            st.markdown("**Parameter**")
-        with col2:
-            st.markdown("**Type**")
-        with col3:
-            st.markdown("**Range**")
-        with col4:
-            st.markdown("**Control**")
-        
-        st.divider()
-        
-        # Create rows with widgets
-        for param in demo_params:
-            col1, col2, col3, col4 = st.columns([2, 1, 1, 2])
-            with col1:
-                st.markdown(f"**{param['label']}**")
-            with col2:
-                st.markdown(f"`{param['type']}`")
-            with col3:
-                st.markdown(f"`{param.get('range', 'N/A')}`")
-            with col4:
-                if param["type"] == "slider":
-                    st.slider("Value", 0.0, 2.0, param["value"], 0.1, label_visibility="collapsed")
-                elif param["type"] == "number":
-                    st.number_input("Value", 0, 100, param["value"], label_visibility="collapsed")
-                elif param["type"] == "dropdown":
-                    st.selectbox("Value", param["options"], index=0, label_visibility="collapsed")
-                elif param["type"] == "checkbox":
-                    st.checkbox("Value", param["value"], label_visibility="collapsed")
-            st.divider()
-        
-        st.caption("💡 This demonstrates how widgets can be embedded directly in table-like layouts")
-
     if task == "RAG-based QA":
         st.header("\U0001F50D RAG-based Question Answering")
         
