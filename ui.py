@@ -47,9 +47,9 @@ with col_left:
 
 # Right side - Main content
 with col_right:
-    # Demo section to showcase different table widget approaches
-    with st.expander("🎨 Table Widget Demo", expanded=False):
-        st.markdown("### Different approaches to show widgets in tables:")
+    # Demo section to showcase interactive grid approach
+    with st.expander("🎨 Interactive Grid Demo", expanded=False):
+        st.markdown("### Interactive table with embedded widgets:")
         
         # Demo parameters
         demo_params = [
@@ -59,65 +59,42 @@ with col_right:
             {"name": "normalize", "label": "Normalize", "type": "checkbox", "value": True}
         ]
         
-        tab1, tab2, tab3 = st.tabs(["📊 Regular Table", "🎛️ Compact Widgets", "🔧 Interactive Grid"])
+        st.markdown("**Interactive Grid Approach:** Widgets embedded directly in table cells")
         
-        with tab1:
-            st.markdown("**Traditional approach:** Table + widgets below")
-            # Create a simple table
-            df = pd.DataFrame(demo_params)
-            st.dataframe(df[["label", "type", "value", "range"]], use_container_width=True)
-            
-            # Widgets below table
-            st.markdown("**Controls:**")
-            for param in demo_params:
-                if param["type"] == "slider":
-                    st.slider(param["label"], 0.0, 2.0, param["value"], 0.1)
-                elif param["type"] == "number":
-                    st.number_input(param["label"], 0, 100, param["value"])
-                elif param["type"] == "dropdown":
-                    st.selectbox(param["label"], param["options"], index=0)
-                elif param["type"] == "checkbox":
-                    st.checkbox(param["label"], param["value"])
+        # Create table header
+        col1, col2, col3, col4 = st.columns([2, 1, 1, 2])
+        with col1:
+            st.markdown("**Parameter**")
+        with col2:
+            st.markdown("**Type**")
+        with col3:
+            st.markdown("**Range**")
+        with col4:
+            st.markdown("**Control**")
         
-        with tab2:
-            st.markdown("**Compact approach:** Widgets inline with table layout")
-            # Create table header
+        st.divider()
+        
+        # Create rows with widgets
+        for param in demo_params:
             col1, col2, col3, col4 = st.columns([2, 1, 1, 2])
             with col1:
-                st.markdown("**Parameter**")
+                st.markdown(f"**{param['label']}**")
             with col2:
-                st.markdown("**Type**")
+                st.markdown(f"`{param['type']}`")
             with col3:
-                st.markdown("**Range**")
+                st.markdown(f"`{param.get('range', 'N/A')}`")
             with col4:
-                st.markdown("**Control**")
-            
+                if param["type"] == "slider":
+                    st.slider("Value", 0.0, 2.0, param["value"], 0.1, label_visibility="collapsed")
+                elif param["type"] == "number":
+                    st.number_input("Value", 0, 100, param["value"], label_visibility="collapsed")
+                elif param["type"] == "dropdown":
+                    st.selectbox("Value", param["options"], index=0, label_visibility="collapsed")
+                elif param["type"] == "checkbox":
+                    st.checkbox("Value", param["value"], label_visibility="collapsed")
             st.divider()
-            
-            # Create rows with widgets
-            for param in demo_params:
-                col1, col2, col3, col4 = st.columns([2, 1, 1, 2])
-                with col1:
-                    st.markdown(f"**{param['label']}**")
-                with col2:
-                    st.markdown(f"`{param['type']}`")
-                with col3:
-                    st.markdown(f"`{param['range']}`")
-                with col4:
-                    if param["type"] == "slider":
-                        st.slider("Value", 0.0, 2.0, param["value"], 0.1, label_visibility="collapsed")
-                    elif param["type"] == "number":
-                        st.number_input("Value", 0, 100, param["value"], label_visibility="collapsed")
-                    elif param["type"] == "dropdown":
-                        st.selectbox("Value", param["options"], index=0, label_visibility="collapsed")
-                    elif param["type"] == "checkbox":
-                        st.checkbox("Value", param["value"], label_visibility="collapsed")
-                st.divider()
         
-        with tab3:
-            st.markdown("**Advanced approach:** Interactive grid with embedded controls")
-            st.info("This would use st_aggrid with custom cell renderers for widgets")
-            st.caption("💡 Requires advanced JavaScript integration")
+        st.caption("💡 This demonstrates how widgets can be embedded directly in table-like layouts")
 
     if task == "RAG-based QA":
         st.header("\U0001F50D RAG-based Question Answering")
