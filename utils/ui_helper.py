@@ -409,8 +409,11 @@ def display_parameters_table(params_list, title, sidebar=True):
     for param in params_list:
         key = f"{title.lower().replace(' ', '_')}_{param.name}"
         
+        # Choose the appropriate streamlit function based on sidebar parameter
+        st_func = st.sidebar if sidebar else st
+        
         if param.type == InputType.DROPDOWN:
-            widget = st.sidebar.selectbox(
+            widget = st_func.selectbox(
                 f"{param.label}",
                 options=param.options,
                 index=param.options.index(param.ideal) if param.ideal in param.options else 0,
@@ -418,7 +421,7 @@ def display_parameters_table(params_list, title, sidebar=True):
                 key=key
             )
         elif param.type == InputType.CHECKBOX:
-            widget = st.sidebar.checkbox(
+            widget = st_func.checkbox(
                 param.label,
                 value=param.ideal,
                 help=f"{param.info} 💡 {param.ideal_value_reason}" if param.ideal_value_reason else param.info,
@@ -442,7 +445,7 @@ def display_parameters_table(params_list, title, sidebar=True):
             if hasattr(param, 'step') and param.step:
                 step = param.step
             
-            widget = st.sidebar.number_input(
+            widget = st_func.number_input(
                 param.label,
                 min_value=min_val,
                 max_value=max_val,
@@ -469,7 +472,7 @@ def display_parameters_table(params_list, title, sidebar=True):
             if hasattr(param, 'step') and param.step:
                 step = param.step
             
-            widget = st.sidebar.slider(
+            widget = st_func.slider(
                 param.label,
                 min_value=min_val,
                 max_value=max_val,
@@ -482,5 +485,305 @@ def display_parameters_table(params_list, title, sidebar=True):
             continue
         
         params[param.name] = widget
+    
+    return params
+
+def display_interactive_parameters_table(params_list, title, sidebar=True):
+    """
+    Display parameters in an interactive table with widgets embedded in the table.
+    
+    Args:
+        params_list: List of parameter objects
+        title: Title for the parameter section
+        sidebar: Whether to display in sidebar
+    """
+    if not params_list:
+        return {}
+    
+    try:
+        from st_aggrid import AgGrid, GridOptionsBuilder, GridUpdateMode, DataReturnMode
+        import pandas as pd
+        
+        # Create a DataFrame for display
+        table_data = []
+        for i, param in enumerate(params_list):
+            # Handle different parameter types (EncodingParam vs DecodingParam)
+            if hasattr(param, 'min_value'):
+                # EncodingParam uses min_value, max_value
+                range_str = f"{param.min_value}-{param.max_value}" if param.min_value and param.max_value else "N/A"
+            elif hasattr(param, 'min'):
+                # DecodingParam uses min, max
+                range_str = f"{param.min}-{param.max}" if param.min is not None and param.max is not None else "N/A"
+            else:
+                range_str = "N/A"
+            
+            table_data.append({
+                "Parameter": param.label,
+                "Type": param.type.value,
+                "Current Value": str(param.ideal),
+                "Range": param.range if hasattr(param, 'range') and param.range else range_str,
+                "Info": param.info[:40] + "..." if len(param.info) > 40 else param.info,
+                "Widget": f"widget_{i}",  # Placeholder for widget
+                "param_index": i  # Store parameter index for reference
+            })
+        
+        df = pd.DataFrame(table_data)
+        
+        # Configure grid options
+        gb = GridOptionsBuilder.from_dataframe(df)
+        gb.configure_column("Parameter", header_name="Parameter", width=150, editable=False)
+        gb.configure_column("Type", header_name="Type", width=100, editable=False)
+        gb.configure_column("Current Value", header_name="Current Value", width=120, editable=False)
+        gb.configure_column("Range", header_name="Range", width=100, editable=False)
+        gb.configure_column("Info", header_name="Info", width=200, editable=False)
+        gb.configure_column("Widget", header_name="Control", width=150, editable=True)
+        
+        grid_options = gb.build()
+        
+        # Display the grid
+        if sidebar:
+            st.sidebar.subheader(f"📋 {title}")
+            grid_response = st.sidebar.agrid(
+                df,
+                gridOptions=grid_options,
+                height=400,
+                width='100%',
+                update_mode=GridUpdateMode.VALUE_CHANGED,
+                data_return_mode=DataReturnMode.FILTERED_AND_SORTED,
+                key=f"{title.lower().replace(' ', '_')}_grid"
+            )
+        else:
+            st.subheader(f"📋 {title}")
+            grid_response = st.agrid(
+                df,
+                gridOptions=grid_options,
+                height=400,
+                width='100%',
+                update_mode=GridUpdateMode.VALUE_CHANGED,
+                data_return_mode=DataReturnMode.FILTERED_AND_SORTED,
+                key=f"{title.lower().replace(' ', '_')}_grid"
+            )
+        
+        # Create widgets below the table for better UX
+        st.caption("💡 Adjust parameters using the controls below:")
+        
+        params = {}
+        for i, param in enumerate(params_list):
+            key = f"{title.lower().replace(' ', '_')}_{param.name}_{i}"
+            
+            # Create widget based on parameter type
+            if param.type == InputType.DROPDOWN:
+                widget = st.selectbox(
+                    f"{param.label}",
+                    options=param.options,
+                    index=param.options.index(param.ideal) if param.ideal in param.options else 0,
+                    help=f"{param.info} 💡 {param.ideal_value_reason}" if param.ideal_value_reason else param.info,
+                    key=key
+                )
+            elif param.type == InputType.CHECKBOX:
+                widget = st.checkbox(
+                    param.label,
+                    value=param.ideal,
+                    help=f"{param.info} 💡 {param.ideal_value_reason}" if param.ideal_value_reason else param.info,
+                    key=key
+                )
+            elif param.type == InputType.NUMBER:
+                # Handle different parameter types
+                if hasattr(param, 'min_value'):
+                    # EncodingParam
+                    if param.value_type == ValueType.FLOAT:
+                        min_val, max_val, ideal_val, step = float(param.min_value), float(param.max_value), float(param.ideal), 0.01
+                    else:
+                        min_val, max_val, ideal_val, step = int(param.min_value), int(param.max_value), int(param.ideal), 1
+                else:
+                    # DecodingParam
+                    if param.value_type == ValueType.FLOAT:
+                        min_val, max_val, ideal_val, step = float(param.min), float(param.max), float(param.ideal), 0.01
+                    else:
+                        min_val, max_val, ideal_val, step = int(param.min), int(param.max), int(param.ideal), 1
+                
+                if hasattr(param, 'step') and param.step:
+                    step = param.step
+                
+                widget = st.number_input(
+                    param.label,
+                    min_value=min_val,
+                    max_value=max_val,
+                    value=ideal_val,
+                    step=step,
+                    help=f"{param.info} 💡 {param.ideal_value_reason}" if param.ideal_value_reason else param.info,
+                    key=key
+                )
+            elif param.type == InputType.SLIDER:
+                # Handle different parameter types
+                if hasattr(param, 'min_value'):
+                    # EncodingParam
+                    if param.value_type == ValueType.FLOAT:
+                        min_val, max_val, ideal_val, step = float(param.min_value), float(param.max_value), float(param.ideal), 0.01
+                    else:
+                        min_val, max_val, ideal_val, step = int(param.min_value), int(param.max_value), int(param.ideal), 1
+                else:
+                    # DecodingParam
+                    if param.value_type == ValueType.FLOAT:
+                        min_val, max_val, ideal_val, step = float(param.min), float(param.max), float(param.ideal), 0.01
+                    else:
+                        min_val, max_val, ideal_val, step = int(param.min), int(param.max), int(param.ideal), 1
+                
+                if hasattr(param, 'step') and param.step:
+                    step = param.step
+                
+                widget = st.slider(
+                    param.label,
+                    min_value=min_val,
+                    max_value=max_val,
+                    value=ideal_val,
+                    step=step,
+                    help=f"{param.info} 💡 {param.ideal_value_reason}" if param.ideal_value_reason else param.info,
+                    key=key
+                )
+            else:
+                continue
+            
+            params[param.name] = widget
+        
+        return params
+        
+    except ImportError:
+        st.error("Please install st-aggrid: `pip install streamlit-aggrid`")
+        # Fallback to regular table display
+        return display_parameters_table(params_list, title, sidebar)
+
+def display_compact_widgets_table(params_list, title, sidebar=True):
+    """
+    Display parameters in a compact table with inline widgets using columns.
+    
+    Args:
+        params_list: List of parameter objects
+        title: Title for the parameter section
+        sidebar: Whether to display in sidebar
+    """
+    if not params_list:
+        return {}
+    
+    # Create header
+    if sidebar:
+        st.sidebar.subheader(f"📋 {title}")
+    else:
+        st.subheader(f"📋 {title}")
+    
+    # Create table header
+    col1, col2, col3, col4 = st.columns([2, 1, 1, 2])
+    with col1:
+        st.markdown("**Parameter**")
+    with col2:
+        st.markdown("**Type**")
+    with col3:
+        st.markdown("**Range**")
+    with col4:
+        st.markdown("**Control**")
+    
+    st.divider()
+    
+    params = {}
+    for i, param in enumerate(params_list):
+        col1, col2, col3, col4 = st.columns([2, 1, 1, 2])
+        
+        with col1:
+            st.markdown(f"**{param.label}**")
+            if param.info:
+                st.caption(param.info[:60] + "..." if len(param.info) > 60 else param.info)
+        
+        with col2:
+            st.markdown(f"`{param.type.value}`")
+        
+        with col3:
+            # Handle different parameter types
+            if hasattr(param, 'min_value'):
+                range_str = f"{param.min_value}-{param.max_value}" if param.min_value and param.max_value else "N/A"
+            elif hasattr(param, 'min'):
+                range_str = f"{param.min}-{param.max}" if param.min is not None and param.max is not None else "N/A"
+            else:
+                range_str = "N/A"
+            st.markdown(f"`{range_str}`")
+        
+        with col4:
+            key = f"{title.lower().replace(' ', '_')}_{param.name}_{i}"
+            
+            # Create widget based on parameter type
+            if param.type == InputType.DROPDOWN:
+                widget = st.selectbox(
+                    "Value",
+                    options=param.options,
+                    index=param.options.index(param.ideal) if param.ideal in param.options else 0,
+                    help=f"{param.info} 💡 {param.ideal_value_reason}" if param.ideal_value_reason else param.info,
+                    key=key,
+                    label_visibility="collapsed"
+                )
+            elif param.type == InputType.CHECKBOX:
+                widget = st.checkbox(
+                    "Value",
+                    value=param.ideal,
+                    help=f"{param.info} 💡 {param.ideal_value_reason}" if param.ideal_value_reason else param.info,
+                    key=key,
+                    label_visibility="collapsed"
+                )
+            elif param.type == InputType.NUMBER:
+                # Handle different parameter types
+                if hasattr(param, 'min_value'):
+                    if param.value_type == ValueType.FLOAT:
+                        min_val, max_val, ideal_val, step = float(param.min_value), float(param.max_value), float(param.ideal), 0.01
+                    else:
+                        min_val, max_val, ideal_val, step = int(param.min_value), int(param.max_value), int(param.ideal), 1
+                else:
+                    if param.value_type == ValueType.FLOAT:
+                        min_val, max_val, ideal_val, step = float(param.min), float(param.max), float(param.ideal), 0.01
+                    else:
+                        min_val, max_val, ideal_val, step = int(param.min), int(param.max), int(param.ideal), 1
+                
+                if hasattr(param, 'step') and param.step:
+                    step = param.step
+                
+                widget = st.number_input(
+                    "Value",
+                    min_value=min_val,
+                    max_value=max_val,
+                    value=ideal_val,
+                    step=step,
+                    help=f"{param.info} 💡 {param.ideal_value_reason}" if param.ideal_value_reason else param.info,
+                    key=key,
+                    label_visibility="collapsed"
+                )
+            elif param.type == InputType.SLIDER:
+                # Handle different parameter types
+                if hasattr(param, 'min_value'):
+                    if param.value_type == ValueType.FLOAT:
+                        min_val, max_val, ideal_val, step = float(param.min_value), float(param.max_value), float(param.ideal), 0.01
+                    else:
+                        min_val, max_val, ideal_val, step = int(param.min_value), int(param.max_value), int(param.ideal), 1
+                else:
+                    if param.value_type == ValueType.FLOAT:
+                        min_val, max_val, ideal_val, step = float(param.min), float(param.max), float(param.ideal), 0.01
+                    else:
+                        min_val, max_val, ideal_val, step = int(param.min), int(param.max), int(param.ideal), 1
+                
+                if hasattr(param, 'step') and param.step:
+                    step = param.step
+                
+                widget = st.slider(
+                    "Value",
+                    min_value=min_val,
+                    max_value=max_val,
+                    value=ideal_val,
+                    step=step,
+                    help=f"{param.info} 💡 {param.ideal_value_reason}" if param.ideal_value_reason else param.info,
+                    key=key,
+                    label_visibility="collapsed"
+                )
+            else:
+                continue
+            
+            params[param.name] = widget
+        
+        st.divider()
     
     return params
