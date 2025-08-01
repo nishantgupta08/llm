@@ -16,6 +16,7 @@ class EncodingParam:
     max_value: Union[int, float, None] = None
     step: Union[int, float, None] = None
     ideal_value_reason: str = ""
+    range: str = ""
 
     def with_overrides(self, **kwargs) -> "EncodingParam":
         return EncodingParam(**{**self.__dict__, **kwargs})
@@ -27,74 +28,108 @@ class EncodingParam:
 
 POOLING = EncodingParam(
     name="pooling",
-    label="Pooling Type",
+    label="Pooling Strategy",
     type=InputType.DROPDOWN,
     value_type=ValueType.STR,
     ideal="mean",
-    options=["mean", "max", "min", "cls", "last_token", "attention"],
-    info="How to aggregate token embeddings into a single vector.",
-    ideal_value_reason="Mean pooling provides a stable representation by averaging token embeddings, reducing noise."
+    options=["mean", "max", "cls", "sum"],
+    info="How to pool token embeddings into a single vector representation. Use 'mean' for average context, 'max' for highlighting strongest signal, or 'cls' for [CLS] token.",
+    range="['mean', 'max', 'cls', 'sum']",
+    ideal_value_reason="Mean pooling offers robust average representation and is compatible with most encoder models."
 )
 
-NORMALIZATION = EncodingParam(
+NORMALIZE = EncodingParam(
     name="normalize",
-    label="Normalization Method",
+    label="Normalize Embeddings",
+    type=InputType.BOOL,
+    value_type=ValueType.BOOL,
+    ideal=True,
+    info="Whether to L2-normalize embeddings, which is recommended when using cosine similarity in retrieval.",
+    ideal_value_reason="L2 normalization standardizes vector magnitudes, improving retrieval quality."
+)
+
+DEVICE = EncodingParam(
+    name="device",
+    label="Device",
     type=InputType.DROPDOWN,
     value_type=ValueType.STR,
-    ideal="none",
-    options=["none", "l2", "l1", "max", "zscore", "minmax"],
-    info="How to normalize the final embedding vector.",
-    ideal_value_reason="Use 'none' when preserving absolute vector magnitudes matters. Use 'l2' for cosine similarity."
+    ideal="auto",
+    options=["auto", "cpu", "cuda"],
+    info="Device to run encoding on: 'cpu', 'cuda' (GPU), or 'auto' to auto-select.",
+    range="['auto', 'cpu', 'cuda']",
+    ideal_value_reason="Auto allows the system to leverage available GPU, ensuring best speed."
 )
 
-LAYER_SELECTION = EncodingParam(
-    name="layer",
-    label="Transformer Layer",
+BATCH_SIZE = EncodingParam(
+    name="batch_size",
+    label="Batch Size",
     type=InputType.NUMBER,
     value_type=ValueType.INT,
-    ideal=-1,
-    min_value=-12,
-    max_value=12,
+    ideal=32,
+    min_value=1,
+    max_value=256,
     step=1,
-    info="Which transformer layer to extract embeddings from.",
-    ideal_value_reason="The last layer (-1) encodes the most semantic information, but second-to-last (-2) is often more stable."
+    info="Number of samples to encode at once (increase for faster performance if enough memory).",
+    range="1-256",
+    ideal_value_reason="32 is a common default balancing speed and memory usage."
 )
 
-SCALING_METHOD = EncodingParam(
-    name="scaling",
-    label="Embedding Scaling",
+FP16 = EncodingParam(
+    name="fp16",
+    label="Use FP16 Precision",
+    type=InputType.BOOL,
+    value_type=ValueType.BOOL,
+    ideal=False,
+    info="If true, use float16 precision for faster and more memory-efficient computation on modern GPUs.",
+    ideal_value_reason="Use FP16 only if the GPU supports it and the model is compatible."
+)
+
+MAX_LENGTH = EncodingParam(
+    name="max_length",
+    label="Maximum Sequence Length",
+    type=InputType.NUMBER,
+    value_type=ValueType.INT,
+    ideal=512,
+    min_value=64,
+    max_value=4096,
+    step=64,
+    info="Maximum number of tokens per sequence for encoding. Longer texts will be truncated or split.",
+    range="64-4096",
+    ideal_value_reason="512 tokens covers most use-cases and fits within most model limits."
+)
+
+TRUNCATION = EncodingParam(
+    name="truncation",
+    label="Enable Truncation",
+    type=InputType.BOOL,
+    value_type=ValueType.BOOL,
+    ideal=True,
+    info="Whether to truncate texts longer than max_length. If false, may throw an error or require splitting.",
+    ideal_value_reason="Truncation prevents errors and ensures model compatibility for long texts."
+)
+
+TOKENIZER = EncodingParam(
+    name="tokenizer",
+    label="Tokenizer Type",
     type=InputType.DROPDOWN,
     value_type=ValueType.STR,
-    ideal="none",
-    options=["none", "unit", "max_abs", "std", "log"],
-    info="Post-processing strategy to scale vector magnitudes.",
-    ideal_value_reason="Use 'unit' scaling when using cosine similarity downstream."
+    ideal="default",
+    options=["default", "fast", "slow", "custom"],
+    info="Select tokenizer (default, fast, slow, custom) if multiple available for the model.",
+    range="['default', 'fast', 'slow', 'custom']",
+    ideal_value_reason="Default is typically optimized for speed and compatibility."
 )
 
-DROPOUT = EncodingParam(
-    name="dropout",
-    label="Dropout Rate",
-    type=InputType.NUMBER,
-    value_type=ValueType.FLOAT,
-    ideal=0.1,
-    min_value=0.0,
-    max_value=0.5,
-    step=0.05,
-    info="Dropout helps regularize the encoding process during training or fine-tuning.",
-    ideal_value_reason="A small dropout (0.1) adds generalization without overly distorting the encoding."
-)
-
-TEMPERATURE = EncodingParam(
-    name="temperature",
-    label="Temperature",
-    type=InputType.NUMBER,
-    value_type=ValueType.FLOAT,
-    ideal=1.0,
-    min_value=0.1,
-    max_value=2.0,
-    step=0.1,
-    info="Temperature controls the sharpness of token probabilities. Lower = confident, higher = diverse.",
-    ideal_value_reason="A value of 1.0 maintains original model distribution without amplifying or smoothing."
+RETURN_TENSORS = EncodingParam(
+    name="return_tensors",
+    label="Return Tensors Type",
+    type=InputType.DROPDOWN,
+    value_type=ValueType.STR,
+    ideal="pt",
+    options=["pt", "np", "tf"],
+    info="Format to return encoded outputs: PyTorch ('pt'), NumPy ('np'), or TensorFlow ('tf').",
+    range="['pt', 'np', 'tf']",
+    ideal_value_reason="PyTorch ('pt') is most widely used and integrates well with HuggingFace and vector DBs."
 )
 
 
@@ -105,24 +140,37 @@ TEMPERATURE = EncodingParam(
 TASK_ENCODING_PARAMS: Dict[str, List[EncodingParam]] = {
     "RAG-based QA": [
         POOLING.with_overrides(ideal="cls", ideal_value_reason="CLS token captures the whole sequence for retrieval."),
-        NORMALIZATION.with_overrides(ideal="l2", ideal_value_reason="L2 normalization ensures embeddings are cosine comparable."),
-        LAYER_SELECTION.with_overrides(ideal=-2, ideal_value_reason="Second-to-last layer is often more generalizable."),
-        SCALING_METHOD.with_overrides(ideal="unit", ideal_value_reason="Unit scaling is helpful for vector stores."),
-        DROPOUT.with_overrides(ideal=0.1),
+        NORMALIZE.with_overrides(ideal=True, ideal_value_reason="L2 normalization ensures embeddings are cosine comparable."),
+        DEVICE.with_overrides(ideal="auto"),
+        BATCH_SIZE.with_overrides(ideal=32),
+        FP16.with_overrides(ideal=False),
+        MAX_LENGTH.with_overrides(ideal=512),
+        TRUNCATION.with_overrides(ideal=True),
+        TOKENIZER.with_overrides(ideal="default"),
+        RETURN_TENSORS.with_overrides(ideal="pt"),
     ],
 
     "Normal QA": [
         POOLING.with_overrides(ideal="mean", ideal_value_reason="Mean pooling gives a broad context useful for QA."),
-        NORMALIZATION.with_overrides(ideal="none", ideal_value_reason="Raw embedding magnitudes may encode semantic signal."),
-        LAYER_SELECTION.with_overrides(ideal=-1),
-        TEMPERATURE.with_overrides(ideal=1.0),
+        NORMALIZE.with_overrides(ideal=False, ideal_value_reason="Raw embedding magnitudes may encode semantic signal."),
+        DEVICE.with_overrides(ideal="auto"),
+        BATCH_SIZE.with_overrides(ideal=32),
+        FP16.with_overrides(ideal=False),
+        MAX_LENGTH.with_overrides(ideal=512),
+        TRUNCATION.with_overrides(ideal=True),
+        TOKENIZER.with_overrides(ideal="default"),
+        RETURN_TENSORS.with_overrides(ideal="pt"),
     ],
 
     "Summarisation": [
         POOLING.with_overrides(ideal="mean", ideal_value_reason="Mean pooling averages sentence info for summary quality."),
-        NORMALIZATION.with_overrides(ideal="zscore", ideal_value_reason="Z-score normalization helps compare across sentences."),
-        LAYER_SELECTION.with_overrides(ideal=-1),
-        DROPOUT.with_overrides(ideal=0.0, ideal_value_reason="For deterministic summarization, dropout is disabled."),
-        SCALING_METHOD.with_overrides(ideal="none"),
+        NORMALIZE.with_overrides(ideal=True, ideal_value_reason="Normalization helps compare across sentences."),
+        DEVICE.with_overrides(ideal="auto"),
+        BATCH_SIZE.with_overrides(ideal=16, ideal_value_reason="Smaller batch size for memory efficiency during summarization."),
+        FP16.with_overrides(ideal=False),
+        MAX_LENGTH.with_overrides(ideal=1024, ideal_value_reason="Longer sequences for comprehensive summarization."),
+        TRUNCATION.with_overrides(ideal=True),
+        TOKENIZER.with_overrides(ideal="default"),
+        RETURN_TENSORS.with_overrides(ideal="pt"),
     ],
 }

@@ -79,14 +79,18 @@ class TaskOrchestrator:
             "task": "RAG-based QA"
         })
 
-        # Create encoder & retriever
+        # Create encoder & vector store
         encoder_instance = LangchainEncoder(encoder_name, **encoding_params)
         # Note: For vector store integration, we need the underlying LangChain embedding model
         # The run() method would be used for direct encoding operations
-        retriever = VectorStoreBuilder(encoder_instance.get_encoder()).get_retriever(
-            documents,  # Pass the actual Document objects for better retrieval
-            int(decoding_params.get("top_k", 5))
-        )
+        vectorstore_builder = VectorStoreBuilder(encoder_instance.get_encoder())
+        
+        # Extract text content from documents for vector store building
+        document_texts = [doc.page_content for doc in documents]
+        vectorstore = vectorstore_builder.build_vectorstore(document_texts)
+        
+        # Create retriever from the built vector store
+        retriever = vectorstore.as_retriever(search_kwargs={"k": int(decoding_params.get("top_k", 5))})
 
         # Create decoder (LLM)
         decoder_instance = LangchainDecoder(decoder_name, **decoding_params)
