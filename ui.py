@@ -9,7 +9,7 @@ from strategies.encoding_strategies import TASK_ENCODING_PARAMS
 from strategies.decoding_strategies import TASK_DECODING_PARAMS
 from utils.ui_helper import render_param_table, model_table_selection
 
-# Task configuration
+# Config for which UI blocks each task has
 TASK_CONFIG = {
     "RAG-based QA": {
         "preprocessing": True,
@@ -44,25 +44,23 @@ task = st.radio("Choose task:", list(TASK_CONFIG.keys()))
 cfg = TASK_CONFIG[task]
 user_params = {}
 
-# Preprocessing Parameters Table
+# Parameter Tables
 if cfg.get("preprocessing"):
     preprocessing_params_list = TASK_PREPROCESSING_PARAMS.get(task, [])
     if preprocessing_params_list:
         user_params["preprocessing"] = render_param_table(preprocessing_params_list, title="Preprocessing Parameters")
 
-# Encoding Parameters Table
 if cfg.get("encoding"):
     encoding_params_list = TASK_ENCODING_PARAMS.get(task, [])
     if encoding_params_list:
         user_params["encoding"] = render_param_table(encoding_params_list, title="Encoding Parameters")
 
-# Decoding Parameters Table
 if cfg.get("decoding"):
     decoding_params_list = TASK_DECODING_PARAMS.get(task, [])
     if decoding_params_list:
         user_params["decoding"] = render_param_table(decoding_params_list, title="Decoding Parameters")
 
-# Model selection sections
+# Model selection blocks
 if cfg.get("encoder"):
     encoder_obj = model_table_selection("Encoder Model", ENCODER_ONLY_MODELS, prefix="encoder")
     user_params["encoder"] = encoder_obj.name if encoder_obj else None
