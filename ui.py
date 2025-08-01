@@ -26,35 +26,64 @@ models = {
     "ENCODER_DECODER_MODELS": ENCODER_DECODER_MODELS,
 }
 
-# Debug: Show model counts
-st.sidebar.write(f"🔍 Model Counts:")
-st.sidebar.write(f"  - Encoder models: {len(ENCODER_ONLY_MODELS)}")
-st.sidebar.write(f"  - Decoder models: {len(DECODER_ONLY_MODELS)}")
-st.sidebar.write(f"  - Encoder-Decoder models: {len(ENCODER_DECODER_MODELS)}")
+# Debug: Show model counts in an expander
+with st.sidebar.expander("📊 Model Statistics", expanded=False):
+    st.write(f"🔍 Model Counts:")
+    st.write(f"  - Encoder models: {len(ENCODER_ONLY_MODELS)}")
+    st.write(f"  - Decoder models: {len(DECODER_ONLY_MODELS)}")
+    st.write(f"  - Encoder-Decoder models: {len(ENCODER_DECODER_MODELS)}")
 
 orchestrator = TaskOrchestrator(models)
 
 # Task selection
-st.sidebar.header("Task Selection")
+st.sidebar.header("🎯 Task Selection")
 task = st.sidebar.radio("Choose task:", ["Normal QA", "RAG-based QA", "Summarisation"])
 
 if task == "RAG-based QA":
     st.header("\U0001F50D RAG-based Question Answering")
-    file = st.file_uploader("Upload document", type=["pdf", "txt"])
     
-    # Preprocessing configuration using the new widget function
-    st.subheader("📝 Text Preprocessing (RAG Optimized)")
-    preprocessing_params = preprocessing_param_widgets(task, prefix="rag_")
+    # File upload section
+    with st.expander("📁 Document Upload", expanded=True):
+        file = st.file_uploader("Upload document", type=["pdf", "txt"])
+        if file:
+            st.success(f"✅ File uploaded: {file.name}")
     
-    # Use table selection for models
-    encoder = model_table_selection("Encoder Model", ENCODER_ONLY_MODELS, task, prefix="encoder")
-    encoding_params = encoding_param_widgets(task, prefix="encoder_")                
-
-    decoder = model_table_selection("Decoder Model", DECODER_ONLY_MODELS, task, prefix="decoder")
-    decoding_params = decoding_param_widgets(task, prefix="decoder_")
+    # Model selection section
+    with st.expander("🤖 Model Selection", expanded=True):
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            encoder = model_table_selection("Encoder Model", ENCODER_ONLY_MODELS, task, prefix="encoder")
+        
+        with col2:
+            decoder = model_table_selection("Decoder Model", DECODER_ONLY_MODELS, task, prefix="decoder")
     
-    prompt = st.text_area("Optional Prompt", "Answer based on the context:")
-    query = st.text_input("Ask a question")
+    # Configuration section
+    with st.expander("⚙️ Advanced Configuration", expanded=False):
+        st.info("💡 Configure model behavior with these parameter groups:")
+        
+        # Encoding Parameters
+        with st.expander("🔧 Encoding Parameters", expanded=False):
+            st.markdown("**Encoding parameters control how text is converted to embeddings:**")
+            st.markdown("- Pooling strategy, normalization, device settings, batch size, etc.")
+            encoding_params = encoding_param_widgets(task, prefix="encoder_")
+        
+        # Decoding Parameters  
+        with st.expander("🎯 Decoding Parameters", expanded=False):
+            st.markdown("**Decoding parameters control how the model generates responses:**")
+            st.markdown("- Temperature, top-k, top-p, repetition penalty, etc.")
+            decoding_params = decoding_param_widgets(task, prefix="decoder_")
+        
+        # Preprocessing Parameters
+        with st.expander("📝 Preprocessing Parameters", expanded=False):
+            st.markdown("**Preprocessing parameters control how text is prepared before processing:**")
+            st.markdown("- Chunk size, overlap, cleaning, tokenization settings, etc.")
+            preprocessing_params = preprocessing_param_widgets(task, prefix="rag_")
+    
+    # Query section
+    with st.expander("❓ Query & Prompt", expanded=True):
+        prompt = st.text_area("Optional Prompt", "Answer based on the context:")
+        query = st.text_input("Ask a question")
     
     # Add submit button
     submit_rag = st.button("🚀 Run RAG Pipeline", type="primary")
@@ -81,16 +110,35 @@ if task == "RAG-based QA":
 elif task == "Normal QA":
     st.header("\U0001F4AC Normal Question Answering")
     
-    # Preprocessing configuration for QA
-    st.subheader("📝 Query Preprocessing (QA Optimized)")
-    preprocessing_params = preprocessing_param_widgets(task, prefix="qa_")
+    # Model selection section
+    with st.expander("🤖 Model Selection", expanded=True):
+        model = model_table_selection("QA Model", ENCODER_DECODER_MODELS, task, prefix="qa")
     
-    # Use table selection for encoder-decoder models
-    model = model_table_selection("QA Model", ENCODER_DECODER_MODELS, task, prefix="qa")
-    encoding_params = encoding_param_widgets(task, prefix="qa_")
-    decoding_params = decoding_param_widgets(task, prefix="qa_")
-
-    query = st.text_input("Ask a question")
+    # Configuration section
+    with st.expander("⚙️ Advanced Configuration", expanded=False):
+        st.info("💡 Configure model behavior with these parameter groups:")
+        
+        # Encoding Parameters
+        with st.expander("🔧 Encoding Parameters", expanded=False):
+            st.markdown("**Encoding parameters control how text is converted to embeddings:**")
+            st.markdown("- Pooling strategy, normalization, device settings, batch size, etc.")
+            encoding_params = encoding_param_widgets(task, prefix="qa_")
+        
+        # Decoding Parameters  
+        with st.expander("🎯 Decoding Parameters", expanded=False):
+            st.markdown("**Decoding parameters control how the model generates responses:**")
+            st.markdown("- Temperature, top-k, top-p, repetition penalty, etc.")
+            decoding_params = decoding_param_widgets(task, prefix="qa_")
+        
+        # Preprocessing Parameters
+        with st.expander("📝 Preprocessing Parameters", expanded=False):
+            st.markdown("**Preprocessing parameters control how text is prepared before processing:**")
+            st.markdown("- Chunk size, overlap, cleaning, tokenization settings, etc.")
+            preprocessing_params = preprocessing_param_widgets(task, prefix="qa_")
+    
+    # Query section
+    with st.expander("❓ Query", expanded=True):
+        query = st.text_input("Ask a question")
     
     # Add submit button
     submit_qa = st.button("🚀 Generate Answer", type="primary")
@@ -111,17 +159,39 @@ elif task == "Normal QA":
 
 elif task == "Summarisation":
     st.header("📄 Summarisation Task")
-    file = st.file_uploader("Upload document", type=["pdf", "txt"])
     
-    # Preprocessing configuration for summarization
-    st.subheader("📝 Text Preprocessing (Summarization Optimized)")
-    preprocessing_params = preprocessing_param_widgets(task, prefix="summary_")
+    # File upload section
+    with st.expander("📁 Document Upload", expanded=True):
+        file = st.file_uploader("Upload document", type=["pdf", "txt"])
+        if file:
+            st.success(f"✅ File uploaded: {file.name}")
     
-    # Use table selection for encoder-decoder models
-    model = model_table_selection("Summarisation Model", ENCODER_DECODER_MODELS, task, prefix="summary")
-    encoding_params = encoding_param_widgets(task, prefix="summary_")
-    decoding_params = decoding_param_widgets(task, prefix="summary_")
-
+    # Model selection section
+    with st.expander("🤖 Model Selection", expanded=True):
+        model = model_table_selection("Summarisation Model", ENCODER_DECODER_MODELS, task, prefix="summary")
+    
+    # Configuration section
+    with st.expander("⚙️ Advanced Configuration", expanded=False):
+        st.info("💡 Configure model behavior with these parameter groups:")
+        
+        # Encoding Parameters
+        with st.expander("🔧 Encoding Parameters", expanded=False):
+            st.markdown("**Encoding parameters control how text is converted to embeddings:**")
+            st.markdown("- Pooling strategy, normalization, device settings, batch size, etc.")
+            encoding_params = encoding_param_widgets(task, prefix="summary_")
+        
+        # Decoding Parameters  
+        with st.expander("🎯 Decoding Parameters", expanded=False):
+            st.markdown("**Decoding parameters control how the model generates responses:**")
+            st.markdown("- Temperature, top-k, top-p, repetition penalty, etc.")
+            decoding_params = decoding_param_widgets(task, prefix="summary_")
+        
+        # Preprocessing Parameters
+        with st.expander("📝 Preprocessing Parameters", expanded=False):
+            st.markdown("**Preprocessing parameters control how text is prepared before processing:**")
+            st.markdown("- Chunk size, overlap, cleaning, tokenization settings, etc.")
+            preprocessing_params = preprocessing_param_widgets(task, prefix="summary_")
+    
     # Add submit button
     submit_summary = st.button("🚀 Generate Summary", type="primary")
 
