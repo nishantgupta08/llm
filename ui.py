@@ -14,7 +14,7 @@ from core.task_orchestrator import TaskOrchestrator
 from strategies.decoding_strategies import TASK_DECODING_PARAMS
 from strategies.encoding_strategies import TASK_ENCODING_PARAMS, EncodingParam
 from strategies.types import InputType, ValueType
-from utils.ui_helper import decoding_param_widgets, model_dropdown, encoding_param_widgets, model_table_selection, preprocessing_param_widgets
+from utils.ui_helper import decoding_param_widgets, model_dropdown, encoding_param_widgets, model_table_selection, preprocessing_param_widgets, display_parameters_table
 
 st.set_page_config(page_title="🧠 GenAI Playground", layout="wide")
 st.title("🧠 GenAI Playground")
@@ -62,23 +62,20 @@ if task == "RAG-based QA":
     with st.expander("⚙️ Advanced Configuration", expanded=False):
         st.info("💡 Configure model behavior with these parameter groups:")
         
-        # Encoding Parameters
-        with st.expander("🔧 Encoding Parameters", expanded=False):
-            st.markdown("**Encoding parameters control how text is converted to embeddings:**")
-            st.markdown("- Pooling strategy, normalization, device settings, batch size, etc.")
-            encoding_params = encoding_param_widgets(task, prefix="encoder_")
+        # Get parameter lists
+        encoding_params_list = TASK_ENCODING_PARAMS.get(task, [])
+        decoding_params_list = TASK_DECODING_PARAMS.get(task, [])
+        preprocessing_params_list = TASK_PREPROCESSING_PARAMS.get(task, [])
         
-        # Decoding Parameters  
-        with st.expander("🎯 Decoding Parameters", expanded=False):
-            st.markdown("**Decoding parameters control how the model generates responses:**")
-            st.markdown("- Temperature, top-k, top-p, repetition penalty, etc.")
-            decoding_params = decoding_param_widgets(task, prefix="decoder_")
+        # Display parameters in tabular format
+        col1, col2 = st.columns(2)
         
-        # Preprocessing Parameters
-        with st.expander("📝 Preprocessing Parameters", expanded=False):
-            st.markdown("**Preprocessing parameters control how text is prepared before processing:**")
-            st.markdown("- Chunk size, overlap, cleaning, tokenization settings, etc.")
-            preprocessing_params = preprocessing_param_widgets(task, prefix="rag_")
+        with col1:
+            encoding_params = display_parameters_table(encoding_params_list, "Encoding Parameters", sidebar=False)
+            decoding_params = display_parameters_table(decoding_params_list, "Decoding Parameters", sidebar=False)
+        
+        with col2:
+            preprocessing_params = display_parameters_table(preprocessing_params_list, "Preprocessing Parameters", sidebar=False)
     
     # Query section
     with st.expander("❓ Query & Prompt", expanded=True):
@@ -118,23 +115,20 @@ elif task == "Normal QA":
     with st.expander("⚙️ Advanced Configuration", expanded=False):
         st.info("💡 Configure model behavior with these parameter groups:")
         
-        # Encoding Parameters
-        with st.expander("🔧 Encoding Parameters", expanded=False):
-            st.markdown("**Encoding parameters control how text is converted to embeddings:**")
-            st.markdown("- Pooling strategy, normalization, device settings, batch size, etc.")
-            encoding_params = encoding_param_widgets(task, prefix="qa_")
+        # Get parameter lists
+        encoding_params_list = TASK_ENCODING_PARAMS.get(task, [])
+        decoding_params_list = TASK_DECODING_PARAMS.get(task, [])
+        preprocessing_params_list = TASK_PREPROCESSING_PARAMS.get(task, [])
         
-        # Decoding Parameters  
-        with st.expander("🎯 Decoding Parameters", expanded=False):
-            st.markdown("**Decoding parameters control how the model generates responses:**")
-            st.markdown("- Temperature, top-k, top-p, repetition penalty, etc.")
-            decoding_params = decoding_param_widgets(task, prefix="qa_")
+        # Display parameters in tabular format
+        col1, col2 = st.columns(2)
         
-        # Preprocessing Parameters
-        with st.expander("📝 Preprocessing Parameters", expanded=False):
-            st.markdown("**Preprocessing parameters control how text is prepared before processing:**")
-            st.markdown("- Chunk size, overlap, cleaning, tokenization settings, etc.")
-            preprocessing_params = preprocessing_param_widgets(task, prefix="qa_")
+        with col1:
+            encoding_params = display_parameters_table(encoding_params_list, "Encoding Parameters", sidebar=False)
+            decoding_params = display_parameters_table(decoding_params_list, "Decoding Parameters", sidebar=False)
+        
+        with col2:
+            preprocessing_params = display_parameters_table(preprocessing_params_list, "Preprocessing Parameters", sidebar=False)
     
     # Query section
     with st.expander("❓ Query", expanded=True):
@@ -174,23 +168,20 @@ elif task == "Summarisation":
     with st.expander("⚙️ Advanced Configuration", expanded=False):
         st.info("💡 Configure model behavior with these parameter groups:")
         
-        # Encoding Parameters
-        with st.expander("🔧 Encoding Parameters", expanded=False):
-            st.markdown("**Encoding parameters control how text is converted to embeddings:**")
-            st.markdown("- Pooling strategy, normalization, device settings, batch size, etc.")
-            encoding_params = encoding_param_widgets(task, prefix="summary_")
+        # Get parameter lists
+        encoding_params_list = TASK_ENCODING_PARAMS.get(task, [])
+        decoding_params_list = TASK_DECODING_PARAMS.get(task, [])
+        preprocessing_params_list = TASK_PREPROCESSING_PARAMS.get(task, [])
         
-        # Decoding Parameters  
-        with st.expander("🎯 Decoding Parameters", expanded=False):
-            st.markdown("**Decoding parameters control how the model generates responses:**")
-            st.markdown("- Temperature, top-k, top-p, repetition penalty, etc.")
-            decoding_params = decoding_param_widgets(task, prefix="summary_")
+        # Display parameters in tabular format
+        col1, col2 = st.columns(2)
         
-        # Preprocessing Parameters
-        with st.expander("📝 Preprocessing Parameters", expanded=False):
-            st.markdown("**Preprocessing parameters control how text is prepared before processing:**")
-            st.markdown("- Chunk size, overlap, cleaning, tokenization settings, etc.")
-            preprocessing_params = preprocessing_param_widgets(task, prefix="summary_")
+        with col1:
+            encoding_params = display_parameters_table(encoding_params_list, "Encoding Parameters", sidebar=False)
+            decoding_params = display_parameters_table(decoding_params_list, "Decoding Parameters", sidebar=False)
+        
+        with col2:
+            preprocessing_params = display_parameters_table(preprocessing_params_list, "Preprocessing Parameters", sidebar=False)
     
     # Add submit button
     submit_summary = st.button("🚀 Generate Summary", type="primary")

@@ -7,7 +7,7 @@ from strategies.types import InputType, ValueType
 
 def display_hint(ideal_value_reason: str, hint_type: str = "info", sidebar=False, description: str = ""):
     """
-    Display a styled hint with optional description above or below parameter widgets.
+    Display a compact hint with tooltip-style information.
     Args:
         ideal_value_reason (str): The reason for the ideal value
         hint_type (str): Type of hint - "info", "warning", "success"
@@ -16,39 +16,78 @@ def display_hint(ideal_value_reason: str, hint_type: str = "info", sidebar=False
     """
     if not ideal_value_reason and not description:
         return
-    colors = {
-        "info": {"bg": "#f0f8ff", "border": "#1f77b4", "icon": "💡"},
-        "warning": {"bg": "#fff3cd", "border": "#ffc107", "icon": "⚠️"},
-        "success": {"bg": "#d1ecf1", "border": "#17a2b8", "icon": "💡"},
-        "decoding": {"bg": "#f0f8ff", "border": "#1f77b4", "icon": "🎯"},
-        "encoding": {"bg": "#fff3cd", "border": "#ffc107", "icon": "🔧"},
-        "preprocessing": {"bg": "#d1ecf1", "border": "#17a2b8", "icon": "⚙️"}
+    
+    icons = {
+        "info": "💡",
+        "warning": "⚠️", 
+        "success": "✅",
+        "decoding": "🎯",
+        "encoding": "🔧",
+        "preprocessing": "⚙️"
     }
-    color_scheme = colors.get(hint_type, colors["info"])
     
-    # Build content with separate sections for description and ideal_value_reason
-    content_parts = []
-    if description:
-        content_parts.append(f"<strong>Info:</strong> {description}")
-    if ideal_value_reason:
-        content_parts.append(f"<strong>Why this value:</strong> {ideal_value_reason}")
+    icon = icons.get(hint_type, "💡")
     
-    content = "<br>".join(content_parts)
+    # Create compact tooltip-style display
+    if description and ideal_value_reason:
+        tooltip_text = f"{description}\n\n💡 {ideal_value_reason}"
+    elif description:
+        tooltip_text = description
+    elif ideal_value_reason:
+        tooltip_text = f"💡 {ideal_value_reason}"
+    else:
+        return
     
+    # Use a small, subtle indicator
     html = f"""<div style='
-            background-color: {color_scheme['bg']}; 
-            padding: 8px; 
-            border-radius: 5px; 
-            border-left: 4px solid {color_scheme['border']}; 
-            margin: 5px 0;
-            font-size: 0.9em;
-        '>
-            <small>{color_scheme['icon']} {content}</small>
+            display: inline-block;
+            margin-left: 5px;
+            cursor: help;
+            font-size: 0.8em;
+            opacity: 0.7;
+        ' title="{tooltip_text}">
+            {icon}
         </div>"""
+    
     if sidebar:
         st.sidebar.markdown(html, unsafe_allow_html=True)
     else:
         st.markdown(html, unsafe_allow_html=True)
+
+def display_compact_info(param, sidebar=False):
+    """
+    Display compact parameter information with smart formatting.
+    """
+    if not param.info and not param.ideal_value_reason:
+        return
+    
+    # Create a compact info display
+    info_parts = []
+    if param.info:
+        info_parts.append(param.info)
+    if param.ideal_value_reason:
+        info_parts.append(f"💡 {param.ideal_value_reason}")
+    
+    if info_parts:
+        # Use a small info badge
+        info_text = " | ".join(info_parts)
+        html = f"""<div style='
+                background-color: #f8f9fa;
+                border: 1px solid #dee2e6;
+                border-radius: 3px;
+                padding: 2px 6px;
+                margin: 2px 0;
+                font-size: 0.75em;
+                color: #6c757d;
+                display: inline-block;
+            '>
+                ℹ️ {info_text}
+            </div>"""
+        
+        if sidebar:
+            st.sidebar.markdown(html, unsafe_allow_html=True)
+        else:
+            st.markdown(html, unsafe_allow_html=True)
 
 def get_param_values_ui(task: str, param_reference: dict) -> dict:
     """
@@ -107,8 +146,9 @@ def _create_widget_and_display_hint(param, key: str, hint_type: str, widget_crea
     help_text = _build_help_text(param.info, param.ideal_value_reason)
     widget = widget_creator_func(param, key, help_text)
     
+    # Display compact info instead of verbose hints
     if param.info or param.ideal_value_reason:
-        display_hint(param.ideal_value_reason, hint_type, sidebar=True, description=param.info)
+        display_compact_info(param, sidebar=True)
     
     return widget
 
@@ -320,3 +360,99 @@ def model_dropdown(label, model_list, task=None, encoding_widgets=None, decoding
         # Show model loaded status
         st.sidebar.success(f"✅ {label} loaded: {selected_name}")
     return selected_name
+
+def display_parameters_table(params_list, title, sidebar=True):
+    """
+    Display parameters in a clean tabular format.
+    
+    Args:
+        params_list: List of parameter objects
+        title: Title for the parameter section
+        sidebar: Whether to display in sidebar
+    """
+    if not params_list:
+        return {}
+    
+    # Create a DataFrame for display
+    table_data = []
+    for param in params_list:
+        table_data.append({
+            "Parameter": param.label,
+            "Type": param.type.value,
+            "Value": str(param.ideal),
+            "Range": param.range if hasattr(param, 'range') else f"{param.min_value}-{param.max_value}" if param.min_value and param.max_value else "N/A",
+            "Info": param.info[:50] + "..." if len(param.info) > 50 else param.info
+        })
+    
+    df = pd.DataFrame(table_data)
+    
+    # Display the table
+    if sidebar:
+        st.sidebar.subheader(f"📋 {title}")
+        st.sidebar.dataframe(df, use_container_width=True, hide_index=True)
+    else:
+        st.subheader(f"📋 {title}")
+        st.dataframe(df, use_container_width=True, hide_index=True)
+    
+    # Create widgets below the table
+    params = {}
+    for param in params_list:
+        key = f"{title.lower().replace(' ', '_')}_{param.name}"
+        
+        if param.type == InputType.DROPDOWN:
+            widget = st.sidebar.selectbox(
+                f"{param.label}",
+                options=param.options,
+                index=param.options.index(param.ideal) if param.ideal in param.options else 0,
+                help=f"{param.info} 💡 {param.ideal_value_reason}" if param.ideal_value_reason else param.info,
+                key=key
+            )
+        elif param.type == InputType.CHECKBOX:
+            widget = st.sidebar.checkbox(
+                param.label,
+                value=param.ideal,
+                help=f"{param.info} 💡 {param.ideal_value_reason}" if param.ideal_value_reason else param.info,
+                key=key
+            )
+        elif param.type == InputType.NUMBER:
+            if param.value_type == ValueType.FLOAT:
+                min_val, max_val, ideal_val, step = float(param.min_value), float(param.max_value), float(param.ideal), 0.01
+            else:
+                min_val, max_val, ideal_val, step = int(param.min_value), int(param.max_value), int(param.ideal), 1
+            
+            if param.step:
+                step = param.step
+            
+            widget = st.sidebar.number_input(
+                param.label,
+                min_value=min_val,
+                max_value=max_val,
+                value=ideal_val,
+                step=step,
+                help=f"{param.info} 💡 {param.ideal_value_reason}" if param.ideal_value_reason else param.info,
+                key=key
+            )
+        elif param.type == InputType.SLIDER:
+            if param.value_type == ValueType.FLOAT:
+                min_val, max_val, ideal_val, step = float(param.min_value), float(param.max_value), float(param.ideal), 0.01
+            else:
+                min_val, max_val, ideal_val, step = int(param.min_value), int(param.max_value), int(param.ideal), 1
+            
+            if param.step:
+                step = param.step
+            
+            widget = st.sidebar.slider(
+                param.label,
+                min_value=min_val,
+                max_value=max_val,
+                value=ideal_val,
+                step=step,
+                help=f"{param.info} 💡 {param.ideal_value_reason}" if param.ideal_value_reason else param.info,
+                key=key
+            )
+        else:
+            continue
+        
+        params[param.name] = widget
+    
+    return params
