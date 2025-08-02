@@ -1,0 +1,326 @@
+{
+  "encoding_parameters": {
+    "pooling": {
+      "label": "Pooling Strategy",
+      "type": "dropdown",
+      "value_type": "str",
+      "options": ["mean", "max", "cls", "sum", "attention", "last"],
+      "info": "How to pool token embeddings into a single vector representation. Use 'mean' for average context, 'max' for strongest signal, 'cls' for [CLS] token, 'attention' for attention-based pooling, 'last' for last hidden state.",
+      "range": "['mean', 'max', 'cls', 'sum', 'attention', 'last']"
+    },
+    "normalize": {
+      "label": "Normalize Embeddings",
+      "type": "checkbox",
+      "value_type": "bool",
+      "info": "Apply L2 normalization to output embeddings. Recommended for cosine similarity."
+    },
+    "device": {
+      "label": "Device",
+      "type": "dropdown",
+      "value_type": "str",
+      "options": ["auto", "cpu", "cuda", "mps"],
+      "info": "Device to run encoding on: 'auto', 'cpu', 'cuda' (GPU), or 'mps' (Apple Silicon)."
+    },
+    "batch_size": {
+      "label": "Batch Size",
+      "type": "number",
+      "value_type": "int",
+      "min_value": 1,
+      "max_value": 1024,
+      "step": 1,
+      "info": "Number of samples to encode per batch. Higher is faster if enough memory."
+    },
+    "fp16": {
+      "label": "Use FP16 Precision",
+      "type": "checkbox",
+      "value_type": "bool",
+      "info": "If true, use float16 for faster encoding on modern GPUs (CUDA or MPS)."
+    },
+    "max_length": {
+      "label": "Maximum Sequence Length",
+      "type": "number",
+      "value_type": "int",
+      "min_value": 32,
+      "max_value": 4096,
+      "step": 8,
+      "info": "Max tokens per input. Longer texts are truncated or chunked."
+    },
+    "truncation": {
+      "label": "Enable Truncation",
+      "type": "checkbox",
+      "value_type": "bool",
+      "info": "If true, inputs longer than max_length are truncated. Otherwise, error or auto-chunk."
+    },
+    "stride": {
+      "label": "Sliding Window Stride",
+      "type": "number",
+      "value_type": "int",
+      "min_value": 0,
+      "max_value": 2048,
+      "step": 8,
+      "info": "Stride for sliding window chunking if truncation is off."
+    },
+    "tokenizer": {
+      "label": "Tokenizer Type",
+      "type": "dropdown",
+      "value_type": "str",
+      "options": ["default", "fast", "slow", "custom"],
+      "info": "Choose tokenizer implementation."
+    },
+    "special_tokens": {
+      "label": "Use Special Tokens",
+      "type": "checkbox",
+      "value_type": "bool",
+      "info": "If true, adds special tokens (e.g. CLS, SEP) for BERT/Transformer models."
+    },
+    "return_tensors": {
+      "label": "Return Tensors Type",
+      "type": "dropdown",
+      "value_type": "str",
+      "options": ["pt", "np", "tf"],
+      "info": "Output type: PyTorch ('pt'), NumPy ('np'), or TensorFlow ('tf')."
+    },
+    "output_hidden_states": {
+      "label": "Return Hidden States",
+      "type": "checkbox",
+      "value_type": "bool",
+      "info": "Whether to return all intermediate hidden states from the encoder."
+    },
+    "aggregation": {
+      "label": "Aggregation Type",
+      "type": "dropdown",
+      "value_type": "str",
+      "options": ["none", "mean", "max", "sum", "attention"],
+      "info": "Aggregation across multiple input segments (if input split)."
+    }
+  },
+  "decoding_parameters": {
+    "temperature": {
+      "label": "Temperature",
+      "type": "slider",
+      "value_type": "float",
+      "min": 0.0,
+      "max": 2.0,
+      "step": 0.01,
+      "info": "Controls randomness. Higher = more diverse/creative."
+    },
+    "top_k": {
+      "label": "Top-K",
+      "type": "slider",
+      "value_type": "int",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "info": "Sample from top K tokens. 0 disables."
+    },
+    "top_p": {
+      "label": "Top-p (Nucleus Sampling)",
+      "type": "slider",
+      "value_type": "float",
+      "min": 0.0,
+      "max": 1.0,
+      "step": 0.01,
+      "info": "Sample from the smallest set of tokens whose total probability ≥ p."
+    },
+    "repetition_penalty": {
+      "label": "Repetition Penalty",
+      "type": "slider",
+      "value_type": "float",
+      "min": 1.0,
+      "max": 2.5,
+      "step": 0.01,
+      "info": "Discourage model from repeating the same output. 1.0 means no penalty."
+    },
+    "length_penalty": {
+      "label": "Length Penalty",
+      "type": "slider",
+      "value_type": "float",
+      "min": 0.0,
+      "max": 2.0,
+      "step": 0.01,
+      "info": "Controls whether model prefers shorter or longer output."
+    },
+    "no_repeat_ngram_size": {
+      "label": "No Repeat N-Gram Size",
+      "type": "slider",
+      "value_type": "int",
+      "min": 0,
+      "max": 10,
+      "step": 1,
+      "info": "Model will not repeat any n-gram of this size."
+    },
+    "max_length": {
+      "label": "Max Output Length",
+      "type": "slider",
+      "value_type": "int",
+      "min": 16,
+      "max": 4096,
+      "step": 8,
+      "info": "Maximum number of tokens to generate."
+    },
+    "min_length": {
+      "label": "Min Output Length",
+      "type": "slider",
+      "value_type": "int",
+      "min": 0,
+      "max": 2048,
+      "step": 8,
+      "info": "Minimum number of tokens to generate."
+    },
+    "num_beams": {
+      "label": "Beam Width",
+      "type": "slider",
+      "value_type": "int",
+      "min": 1,
+      "max": 20,
+      "step": 1,
+      "info": "Number of beams in beam search decoding. Higher = better, but slower."
+    },
+    "early_stopping": {
+      "label": "Early Stopping",
+      "type": "checkbox",
+      "value_type": "bool",
+      "info": "Stop generation early if all beams finish."
+    },
+    "do_sample": {
+      "label": "Sampling",
+      "type": "checkbox",
+      "value_type": "bool",
+      "info": "If true, model samples randomly instead of greedy/beam search."
+    },
+    "typical_p": {
+      "label": "Typical Sampling p",
+      "type": "slider",
+      "value_type": "float",
+      "min": 0.0,
+      "max": 1.0,
+      "step": 0.01,
+      "info": "Controls typical sampling, an alternative to nucleus sampling."
+    },
+    "penalty_alpha": {
+      "label": "Penalty Alpha (Contrastive Search)",
+      "type": "slider",
+      "value_type": "float",
+      "min": 0.0,
+      "max": 1.0,
+      "step": 0.01,
+      "info": "Contrastive decoding penalty alpha parameter."
+    },
+    "top_a": {
+      "label": "Top-A",
+      "type": "slider",
+      "value_type": "float",
+      "min": 0.0,
+      "max": 1.0,
+      "step": 0.01,
+      "info": "Alternative top-a sampling."
+    },
+    "temperature_decay": {
+      "label": "Temperature Decay",
+      "type": "slider",
+      "value_type": "float",
+      "min": 0.0,
+      "max": 1.0,
+      "step": 0.01,
+      "info": "Decay temperature as tokens are generated."
+    },
+    "prefix_allowed_tokens": {
+      "label": "Allowed Prefix Tokens",
+      "type": "text",
+      "value_type": "str",
+      "info": "Comma-separated list of allowed prefix tokens."
+    }
+  },
+  "preprocessing_parameters": {
+    "splitter_type": {
+      "label": "Text Splitter",
+      "type": "dropdown",
+      "value_type": "str",
+      "options": ["recursive", "character", "token", "sentence", "paragraph", "custom"],
+      "info": "How to chunk the text. 'recursive' adapts to structure, 'sentence' for natural language."
+    },
+    "chunk_size": {
+      "label": "Chunk Size",
+      "type": "number",
+      "value_type": "int",
+      "min_value": 100,
+      "max_value": 10000,
+      "step": 100,
+      "info": "Size (in characters/tokens) for each text chunk."
+    },
+    "chunk_overlap": {
+      "label": "Chunk Overlap",
+      "type": "number",
+      "value_type": "int",
+      "min_value": 0,
+      "max_value": 1000,
+      "step": 50,
+      "info": "Amount of overlap (in characters/tokens) between consecutive chunks."
+    },
+    "remove_empty": {
+      "label": "Remove Empty Chunks",
+      "type": "checkbox",
+      "value_type": "bool",
+      "info": "Remove chunks that are empty or only whitespace."
+    },
+    "min_chunk_length": {
+      "label": "Minimum Chunk Length",
+      "type": "number",
+      "value_type": "int",
+      "min_value": 0,
+      "max_value": 1000,
+      "step": 10,
+      "info": "Minimum length (in characters) for a chunk to be retained."
+    },
+    "merge_small_chunks": {
+      "label": "Merge Small Sections",
+      "type": "checkbox",
+      "value_type": "bool",
+      "info": "Merge short chunks into neighboring ones."
+    },
+    "preserve_structure": {
+      "label": "Preserve Structure",
+      "type": "checkbox",
+      "value_type": "bool",
+      "info": "Keep paragraphs/sentences intact during splitting."
+    },
+    "enhance_retrieval": {
+      "label": "Enhance for Retrieval",
+      "type": "checkbox",
+      "value_type": "bool",
+      "info": "Optimize chunks for search engine retrieval."
+    },
+    "clean_text": {
+      "label": "Clean Text",
+      "type": "checkbox",
+      "value_type": "bool",
+      "info": "Lowercase, normalize whitespace and punctuation."
+    },
+    "remove_special_chars": {
+      "label": "Remove Special Characters",
+      "type": "checkbox",
+      "value_type": "bool",
+      "info": "Remove symbols and special chars from the text."
+    },
+    "extract_key_sentences": {
+      "label": "Extract Key Sentences",
+      "type": "checkbox",
+      "value_type": "bool",
+      "info": "Identify and extract most important sentences from each chunk."
+    },
+    "language": {
+      "label": "Language",
+      "type": "dropdown",
+      "value_type": "str",
+      "options": ["en", "de", "fr", "es", "it", "other"],
+      "info": "Language of the document for preprocessing-specific handling."
+    },
+    "sentence_splitter": {
+      "label": "Sentence Splitter",
+      "type": "dropdown",
+      "value_type": "str",
+      "options": ["default", "spacy", "nltk", "custom"],
+      "info": "Which library/tool to use for sentence splitting."
+    }
+  }
+}
