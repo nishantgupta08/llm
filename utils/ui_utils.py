@@ -40,6 +40,76 @@ def model_picker_table(models_df, key="model_picker"):
 
     return models_df.loc[selected_index]
 
+
+def model_picker_table_with_checkboxes(models_df, key="model_picker_checkbox"):
+    """
+    Display an interactive model table with checkboxes for selection.
+    Returns the selected model (as pd.Series) or None if no model is selected.
+    """
+    # Create columns for the table with checkbox in first column
+    cols = st.columns([1, 2, 2, 2, 2, 2, 2, 2])
+    headers = ["Select", "Name", "Type", "Size", "Trained On", "Source", "Description", "Intended Use"]
+    for col, h in zip(cols, headers):
+        col.markdown(f"**{h}**")
+
+    selected_model = None
+    
+    for i, model in models_df.iterrows():
+        cols = st.columns([1, 2, 2, 2, 2, 2, 2, 2])
+        
+        # Checkbox in first column
+        is_selected = cols[0].checkbox("", key=f"{key}_{i}")
+        
+        # Model information in other columns
+        cols[1].markdown(f"**{model['name']}**")
+        cols[2].markdown(model['type'])
+        cols[3].markdown(model['size'])
+        cols[4].markdown(model['trained_on'])
+        cols[5].markdown(model['source'])
+        cols[6].markdown(model['description'])
+        cols[7].markdown(model['intended_use'])
+        
+        # If this model is selected, store it
+        if is_selected:
+            selected_model = model
+    
+    return selected_model
+
+
+def model_picker_table_multi_select(models_df, key="model_picker_multi"):
+    """
+    Display an interactive model table with checkboxes for multi-selection.
+    Returns a list of selected models (as pd.Series objects).
+    """
+    # Create columns for the table with checkbox in first column
+    cols = st.columns([1, 2, 2, 2, 2, 2, 2, 2])
+    headers = ["Select", "Name", "Type", "Size", "Trained On", "Source", "Description", "Intended Use"]
+    for col, h in zip(cols, headers):
+        col.markdown(f"**{h}**")
+
+    selected_models = []
+    
+    for i, model in models_df.iterrows():
+        cols = st.columns([1, 2, 2, 2, 2, 2, 2, 2])
+        
+        # Checkbox in first column
+        is_selected = cols[0].checkbox("", key=f"{key}_{i}")
+        
+        # Model information in other columns
+        cols[1].markdown(f"**{model['name']}**")
+        cols[2].markdown(model['type'])
+        cols[3].markdown(model['size'])
+        cols[4].markdown(model['trained_on'])
+        cols[5].markdown(model['source'])
+        cols[6].markdown(model['description'])
+        cols[7].markdown(model['intended_use'])
+        
+        # If this model is selected, add it to the list
+        if is_selected:
+            selected_models.append(model)
+    
+    return selected_models
+
     
 def parameter_table(param_dict, task_name, param_category, get_ideal_value, get_ideal_value_reason):
     """

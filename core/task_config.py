@@ -10,11 +10,12 @@ import os
 from typing import Dict, Any, Optional, List
 import json
 
-# Get the directory where this file is located
+# Get the directory where this file is located and the config directory
 current_dir = os.path.dirname(os.path.abspath(__file__))
+config_dir = os.path.join(os.path.dirname(current_dir), 'config')
 
 # Load models from models.json using absolute path
-models_json_path = os.path.join(current_dir, 'models.json')
+models_json_path = os.path.join(config_dir, 'models.json')
 try:
     with open(models_json_path, 'r', encoding='utf-8') as f:
         models_json = json.load(f)
@@ -36,7 +37,7 @@ ENCODER_DECODER_MODELS = models_json.get("ENCODER_DECODER_MODELS", [])
 def load_parameters_config() -> Dict[str, Any]:
     """Load the main parameters configuration from parameters.json."""
     try:
-        parameters_path = os.path.join(current_dir, 'parameters.json')
+        parameters_path = os.path.join(config_dir, 'parameters.json')
         with open(parameters_path, 'r', encoding='utf-8') as f:
             return json.load(f)
     except FileNotFoundError:
@@ -49,7 +50,7 @@ def load_parameters_config() -> Dict[str, Any]:
 def load_task_param_overrides() -> Dict[str, Any]:
     """Load task-specific parameter overrides from task_overrides.json."""
     try:
-        overrides_path = os.path.join(current_dir, 'task_overrides.json')
+        overrides_path = os.path.join(config_dir, 'task_overrides.json')
         with open(overrides_path, 'r', encoding='utf-8') as f:
             return json.load(f)
     except FileNotFoundError:
