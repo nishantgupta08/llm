@@ -142,7 +142,7 @@ def get_ideal_value_reason(task_name: str, param_type: str, param_name: str) -> 
 TASK_CONFIG = {
     "RAG-based QA": {
         "ui_blocks": ["preprocessing", "encoder", "decoder"],
-        "param_blocks": ["preprocessing", "encoding"],
+        "param_blocks": ["preprocessing", "encoding", "decoding"],
     },
     "Normal QA": {
         "ui_blocks": ["preprocessing", "encoding", "decoding", "encoder_decoder"],
