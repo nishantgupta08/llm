@@ -8,7 +8,15 @@ This file consolidates all task-related configurations in one place.
 import json
 import os
 from typing import Dict, Any, Optional, List
-from config.models import ENCODER_ONLY_MODELS, DECODER_ONLY_MODELS, ENCODER_DECODER_MODELS
+import json
+
+# Load models from models.json
+with open('config/models.json') as f:
+    models_json = json.load(f)
+
+ENCODER_ONLY_MODELS = models_json.get("ENCODER_ONLY_MODELS", [])
+DECODER_ONLY_MODELS = models_json.get("DECODER_ONLY_MODELS", [])
+ENCODER_DECODER_MODELS = models_json.get("ENCODER_DECODER_MODELS", [])
 
 # =============================================================================
 # PARAMETER CONFIGURATION LOADING
