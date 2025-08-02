@@ -218,17 +218,28 @@ def parameter_table(param_dict, task_name, param_category, get_ideal_value, get_
             if widget_type in ("dropdown", "select"):
                 value = st.selectbox("", options, index=options.index(ideal) if ideal in options else 0, key=p)
             elif widget_type == "slider":
-                value = st.slider(
-                    "", cfg.get("min_value", 0), cfg.get("max_value", 100),
-                    value=ideal or cfg.get("min_value", 0), step=cfg.get("step", 1), key=p
-                )
+                # Use correct parameter names from JSON config
+                min_val = cfg.get("min", 0)
+                max_val = cfg.get("max", 100)
+                step_val = cfg.get("step", 1)
+                default_val = ideal if ideal is not None else min_val
+                
+                # Ensure consistent types for slider parameters
+                if isinstance(min_val, int) and isinstance(max_val, int):
+                    # Integer slider
+                    value = st.slider("", min_val, max_val, value=int(default_val), step=step_val, key=p)
+                else:
+                    # Float slider
+                    value = st.slider("", float(min_val), float(max_val), value=float(default_val), step=float(step_val), key=p)
             elif widget_type == "checkbox":
                 value = st.checkbox("", value=bool(ideal), key=p)
             elif widget_type == "number":
-                value = st.number_input(
-                    "", cfg.get("min_value", 0), cfg.get("max_value", 100),
-                    value=ideal or cfg.get("min_value", 0), step=cfg.get("step", 1), key=p
-                )
+                # Use correct parameter names from JSON config
+                min_val = cfg.get("min_value", 0)
+                max_val = cfg.get("max_value", 100)
+                step_val = cfg.get("step", 1)
+                default_val = ideal if ideal is not None else min_val
+                value = st.number_input("", min_val, max_val, value=default_val, step=step_val, key=p)
             else:
                 value = st.text_input("", value=str(ideal or ""), key=p)
             
