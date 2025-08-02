@@ -11,7 +11,8 @@ from components.encoder import LangchainEncoder
 from components.decoder import LangchainDecoder
 from components.encoder_decoder import LangchainEncoderDecoder
 from components.preprocessor import LangchainPreprocessor
-from strategies.preprocessing_strategies import TASK_PREPROCESSING_PARAMS
+# Strategies removed - using empty defaults
+TASK_PREPROCESSING_PARAMS = {}
 
 
 class TaskOrchestrator:
@@ -66,7 +67,9 @@ class TaskOrchestrator:
         
         # Apply RAG-specific preprocessing
         rag_params = TASK_PREPROCESSING_PARAMS.get("RAG-based QA", [])
-        rag_config = {param.name: param.ideal for param in rag_params}
+        rag_config = {}
+        if rag_params:
+            rag_config = {param.name: param.ideal for param in rag_params}
         config = {**rag_config, **preprocessing_config}
         
         preprocessor = LangchainPreprocessor(**config)
@@ -147,7 +150,9 @@ class TaskOrchestrator:
 
         # Apply QA-specific preprocessing
         qa_params = TASK_PREPROCESSING_PARAMS.get("Normal QA", [])
-        qa_config = {param.name: param.ideal for param in qa_params}
+        qa_config = {}
+        if qa_params:
+            qa_config = {param.name: param.ideal for param in qa_params}
         config = {**qa_config, **preprocessing_config}
         
         preprocessor = LangchainPreprocessor(**config)
@@ -189,7 +194,9 @@ class TaskOrchestrator:
 
         # Apply summarization-specific preprocessing
         summary_params = TASK_PREPROCESSING_PARAMS.get("Summarisation", [])
-        summary_config = {param.name: param.ideal for param in summary_params}
+        summary_config = {}
+        if summary_params:
+            summary_config = {param.name: param.ideal for param in summary_params}
         config = {**summary_config, **preprocessing_config}
         
         preprocessor = LangchainPreprocessor(**config)
