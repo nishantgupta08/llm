@@ -10,9 +10,20 @@ import os
 from typing import Dict, Any, Optional, List
 import json
 
-# Load models from models.json
-with open('config/models.json') as f:
-    models_json = json.load(f)
+# Get the directory where this file is located
+current_dir = os.path.dirname(os.path.abspath(__file__))
+
+# Load models from models.json using absolute path
+models_json_path = os.path.join(current_dir, 'models.json')
+try:
+    with open(models_json_path, 'r', encoding='utf-8') as f:
+        models_json = json.load(f)
+except FileNotFoundError:
+    print(f"Warning: {models_json_path} not found. Using empty model configuration.")
+    models_json = {}
+except json.JSONDecodeError as e:
+    print(f"Error parsing {models_json_path}: {e}")
+    models_json = {}
 
 ENCODER_ONLY_MODELS = models_json.get("ENCODER_ONLY_MODELS", [])
 DECODER_ONLY_MODELS = models_json.get("DECODER_ONLY_MODELS", [])
@@ -25,7 +36,8 @@ ENCODER_DECODER_MODELS = models_json.get("ENCODER_DECODER_MODELS", [])
 def load_parameters_config() -> Dict[str, Any]:
     """Load the main parameters configuration from parameters.json."""
     try:
-        with open('config/parameters.json', 'r', encoding='utf-8') as f:
+        parameters_path = os.path.join(current_dir, 'parameters.json')
+        with open(parameters_path, 'r', encoding='utf-8') as f:
             return json.load(f)
     except FileNotFoundError:
         print("Warning: config/parameters.json not found. Using empty configuration.")
@@ -37,7 +49,8 @@ def load_parameters_config() -> Dict[str, Any]:
 def load_task_param_overrides() -> Dict[str, Any]:
     """Load task-specific parameter overrides from task_overrides.json."""
     try:
-        with open('config/task_overrides.json', 'r', encoding='utf-8') as f:
+        overrides_path = os.path.join(current_dir, 'task_overrides.json')
+        with open(overrides_path, 'r', encoding='utf-8') as f:
             return json.load(f)
     except FileNotFoundError:
         print("Warning: config/task_overrides.json not found. Using empty configuration.")
