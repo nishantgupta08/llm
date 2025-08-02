@@ -1,0 +1,33 @@
+{
+  "RAG-based QA": {
+    "encoding": {
+      "pooling": {
+        "ideal": "cls",
+        "ideal_value_reason": "CLS is best for retrieval."
+      },
+      "batch_size": { "ideal": 32 }
+    },
+    "decoding": {
+      "temperature": {
+        "ideal": 0.3,
+        "ideal_value_reason": "Low temp for factuality."
+      }
+    },
+    "preprocessing": {
+      "splitter_type": {
+        "ideal": "recursive"
+      }
+    }
+  },
+  "Normal QA": {
+    "encoding": {
+      "pooling": { "ideal": "mean" }
+    },
+    "decoding": {
+      "temperature": { "ideal": 0.5 }
+    },
+    "preprocessing": {
+      "splitter_type": { "ideal": "character" }
+    }
+  }
+}
