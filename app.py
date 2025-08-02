@@ -13,7 +13,15 @@ from core.task_config import (
     DECODER_ONLY_MODELS,
     ENCODER_DECODER_MODELS
 )
-from utils.ui_utils import parameter_table, model_picker_table_with_checkboxes
+from utils.ui_utils import parameter_table, model_picker_table_with_radio
+
+# Load custom CSS
+def load_css():
+    with open('style.css') as f:
+        st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
+
+# Load CSS
+load_css()
 
 st.set_page_config(page_title="🧠 GenAI Playground", layout="wide")
 st.title("🧠 GenAI Playground")
@@ -38,7 +46,7 @@ if "encoder" in ui_blocks:
     st.markdown("#### Encoder Models")
     encoder_df = pd.DataFrame(ENCODER_ONLY_MODELS)
     if not encoder_df.empty:
-        selected_encoder = model_picker_table_with_checkboxes(encoder_df, key="encoder_models")
+        selected_encoder = model_picker_table_with_radio(encoder_df, key="encoder_models")
         if selected_encoder is not None:
             selected_models["encoder"] = selected_encoder
             st.success(f"✅ Selected Encoder: {selected_encoder['name']}")
@@ -51,7 +59,7 @@ if "decoder" in ui_blocks:
     st.markdown("#### Decoder Models")
     decoder_df = pd.DataFrame(DECODER_ONLY_MODELS)
     if not decoder_df.empty:
-        selected_decoder = model_picker_table_with_checkboxes(decoder_df, key="decoder_models")
+        selected_decoder = model_picker_table_with_radio(decoder_df, key="decoder_models")
         if selected_decoder is not None:
             selected_models["decoder"] = selected_decoder
             st.success(f"✅ Selected Decoder: {selected_decoder['name']}")
@@ -64,7 +72,7 @@ if "encoder_decoder" in ui_blocks:
     st.markdown("#### Encoder-Decoder Models")
     encoder_decoder_df = pd.DataFrame(ENCODER_DECODER_MODELS)
     if not encoder_decoder_df.empty:
-        selected_encoder_decoder = model_picker_table_with_checkboxes(encoder_decoder_df, key="encoder_decoder_models")
+        selected_encoder_decoder = model_picker_table_with_radio(encoder_decoder_df, key="encoder_decoder_models")
         if selected_encoder_decoder is not None:
             selected_models["encoder_decoder"] = selected_encoder_decoder
             st.success(f"✅ Selected Encoder-Decoder: {selected_encoder_decoder['name']}")

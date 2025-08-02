@@ -1,0 +1,229 @@
+/* Custom CSS for GenAI Playground */
+
+/* Consistent table styling */
+.model-table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 10px 0;
+}
+
+.model-table th,
+.model-table td {
+    border: 1px solid #ddd;
+    padding: 12px;
+    text-align: left;
+    vertical-align: top;
+    min-height: 60px;
+    height: 60px;
+}
+
+.model-table th {
+    background-color: #f8f9fa;
+    font-weight: bold;
+    color: #333;
+}
+
+.model-table tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+.model-table tr:hover {
+    background-color: #f5f5f5;
+}
+
+/* Selected row highlighting */
+.model-table tr.selected {
+    background-color: #e3f2fd !important;
+    border-left: 4px solid #2196f3;
+}
+
+/* Table header styling */
+.model-table-header {
+    font-weight: bold;
+    color: #333;
+    background-color: #f8f9fa;
+    padding: 12px;
+    border-bottom: 2px solid #ddd;
+    font-size: 1.1em;
+}
+
+/* Table row styling */
+.model-table-row {
+    padding: 12px;
+    min-height: 60px;
+    height: 60px;
+    vertical-align: top;
+    border-bottom: 1px solid #eee;
+}
+
+.model-table-row.selected {
+    background-color: #e3f2fd !important;
+    border-left: 4px solid #2196f3;
+}
+
+/* Parameter table styling */
+.parameter-table-header {
+    font-weight: bold;
+    color: #333;
+    background-color: #f8f9fa;
+    padding: 12px;
+    border-bottom: 2px solid #ddd;
+    font-size: 1.1em;
+}
+
+.parameter-table-row {
+    padding: 12px;
+    min-height: 50px;
+    height: 50px;
+    vertical-align: top;
+    border-bottom: 1px solid #eee;
+}
+
+.parameter-info {
+    font-size: 0.9em;
+    color: #666;
+    line-height: 1.4;
+}
+
+.ideal-value {
+    font-weight: bold;
+    color: #28a745;
+}
+
+.reason {
+    font-size: 0.9em;
+    color: #6c757d;
+    font-style: italic;
+}
+
+/* Radio button styling */
+.radio-indicator {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: 2px solid #ccc;
+    text-align: center;
+    line-height: 12px;
+    font-size: 12px;
+    color: #2196f3;
+}
+
+.radio-indicator.selected {
+    background-color: #2196f3;
+    border-color: #2196f3;
+    color: white;
+}
+
+/* Model name styling */
+.model-name {
+    font-weight: bold;
+    color: #2196f3;
+}
+
+/* Description text styling */
+.model-description {
+    font-size: 0.9em;
+    color: #666;
+    line-height: 1.4;
+}
+
+/* Table container */
+.table-container {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    overflow: hidden;
+    margin: 15px 0;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    background-color: white;
+}
+
+/* Section headers */
+.section-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 15px 20px;
+    margin: 20px 0 10px 0;
+    border-radius: 8px;
+    font-size: 1.2em;
+    font-weight: bold;
+}
+
+/* Success and info messages */
+.success-message {
+    background-color: #d4edda;
+    border: 1px solid #c3e6cb;
+    color: #155724;
+    padding: 10px 15px;
+    border-radius: 5px;
+    margin: 10px 0;
+}
+
+.info-message {
+    background-color: #d1ecf1;
+    border: 1px solid #bee5eb;
+    color: #0c5460;
+    padding: 10px 15px;
+    border-radius: 5px;
+    margin: 10px 0;
+}
+
+/* Parameter table styling */
+.parameter-table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 10px 0;
+}
+
+.parameter-table th,
+.parameter-table td {
+    border: 1px solid #ddd;
+    padding: 10px;
+    text-align: left;
+    vertical-align: top;
+    min-height: 50px;
+    height: 50px;
+}
+
+.parameter-table th {
+    background-color: #f8f9fa;
+    font-weight: bold;
+    color: #333;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .model-table th,
+    .model-table td {
+        padding: 8px;
+        font-size: 0.9em;
+    }
+    
+    .parameter-table-row {
+        padding: 8px;
+        font-size: 0.9em;
+    }
+    
+    .section-header {
+        font-size: 1.1em;
+        padding: 12px 15px;
+    }
+}
+
+/* Custom scrollbar for long tables */
+.table-container::-webkit-scrollbar {
+    width: 8px;
+}
+
+.table-container::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+.table-container::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+}
+
+.table-container::-webkit-scrollbar-thumb:hover {
+    background: #555;
+} 
