@@ -180,7 +180,8 @@ def parameter_table(param_dict, task_name, param_category, get_ideal_value, get_
     # Start parameter table container with CSS class
     st.markdown('<div class="table-container">', unsafe_allow_html=True)
     
-    cols = st.columns([2, 3, 2, 2, 3])  # Adjust column width as needed
+    # Create header row
+    cols = st.columns([2, 3, 2, 2, 3])
     headers = ["Label", "Info", "Ideal Value", "Reason", "Value"]
     
     # Header row with CSS styling
@@ -193,21 +194,26 @@ def parameter_table(param_dict, task_name, param_category, get_ideal_value, get_
         cols = st.columns([2, 3, 2, 2, 3])
         
         # Parameter label
-        cols[0].markdown(f'<div class="parameter-table-row">{cfg.get("label", p)}</div>', unsafe_allow_html=True)
+        cols[0].markdown(f'<div class="parameter-table-row parameter-label">{cfg.get("label", p)}</div>', unsafe_allow_html=True)
         
-        # Parameter info
-        cols[1].markdown(f'<div class="parameter-table-row parameter-info">{cfg.get("info", "")}</div>', unsafe_allow_html=True)
+        # Parameter info with proper text wrapping
+        info_text = cfg.get("info", "")
+        cols[1].markdown(f'<div class="parameter-table-row parameter-info">{info_text}</div>', unsafe_allow_html=True)
         
         # Ideal value
         ideal = get_ideal_value(task_name, param_category, p)
-        cols[2].markdown(f'<div class="parameter-table-row ideal-value">{str(ideal) if ideal is not None else ""}</div>', unsafe_allow_html=True)
+        ideal_text = str(ideal) if ideal is not None else ""
+        cols[2].markdown(f'<div class="parameter-table-row ideal-value">{ideal_text}</div>', unsafe_allow_html=True)
         
         # Reason
         reason = get_ideal_value_reason(task_name, param_category, p)
-        cols[3].markdown(f'<div class="parameter-table-row reason">{str(reason) if reason is not None else ""}</div>', unsafe_allow_html=True)
+        reason_text = str(reason) if reason is not None else ""
+        cols[3].markdown(f'<div class="parameter-table-row reason">{reason_text}</div>', unsafe_allow_html=True)
         
-        # Value input widget
+        # Value input widget - place it in a container div
         with cols[4]:
+            st.markdown('<div class="parameter-table-row widget-container">', unsafe_allow_html=True)
+            
             widget_type = cfg.get("type", "text")
             options = cfg.get("options", [])
             
@@ -228,6 +234,7 @@ def parameter_table(param_dict, task_name, param_category, get_ideal_value, get_
             else:
                 value = st.text_input("", value=str(ideal or ""), key=p)
             
+            st.markdown('</div>', unsafe_allow_html=True)
             values[p] = value
     
     # End parameter table container

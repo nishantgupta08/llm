@@ -77,12 +77,26 @@
     height: 50px;
     vertical-align: top;
     border-bottom: 1px solid #eee;
+    display: flex;
+    align-items: center;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+.parameter-label {
+    font-weight: bold;
+    color: #333;
 }
 
 .parameter-info {
     font-size: 0.9em;
     color: #666;
     line-height: 1.4;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: normal;
+    word-wrap: break-word;
 }
 
 .ideal-value {
@@ -94,6 +108,20 @@
     font-size: 0.9em;
     color: #6c757d;
     font-style: italic;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: normal;
+    word-wrap: break-word;
+}
+
+.widget-container {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    min-height: 50px;
+    height: 50px;
+    padding: 8px 12px;
 }
 
 /* Radio button styling */
@@ -202,6 +230,14 @@
     .parameter-table-row {
         padding: 8px;
         font-size: 0.9em;
+        min-height: 40px;
+        height: 40px;
+    }
+    
+    .widget-container {
+        min-height: 40px;
+        height: 40px;
+        padding: 6px 8px;
     }
     
     .section-header {
