@@ -1,5 +1,14 @@
 import streamlit as st
 
+
+def model_dropdown(label, model_list):
+    """Dropdown for model selection. Returns the selected model name or None."""
+    if not model_list:
+        st.warning("No models available.")
+        return None
+    model_names = [m if isinstance(m, str) else getattr(m, "name", str(m)) for m in model_list]
+    return st.selectbox(label, model_names)
+    
 def parameter_table(param_dict, task_name, param_category, get_ideal_value, get_ideal_value_reason):
     """
     Renders parameters as a table with columns: Label | Info | Ideal Value | Reason | Value.
