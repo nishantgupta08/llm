@@ -1,4 +1,5 @@
 import streamlit as st
+import pandas as pd
 
 
 def model_dropdown(label, model_list):
@@ -8,6 +9,37 @@ def model_dropdown(label, model_list):
         return None
     model_names = [m if isinstance(m, str) else getattr(m, "name", str(m)) for m in model_list]
     return st.selectbox(label, model_names)
+
+
+def model_picker_table(models_df, key="model_picker"):
+    """
+    Display an interactive model table with a radio button for single selection.
+    Returns the selected model (as pd.Series).
+    """
+    row_labels = [f"{row['name']} ({row['type']})" for _, row in models_df.iterrows()]
+    selected_index = st.radio(
+        "Select a model:", options=list(models_df.index),
+        format_func=lambda i: row_labels[i], key=key
+    )
+
+    cols = st.columns([2, 2, 2, 2, 2, 2, 2])
+    headers = ["Name", "Type", "Size", "Trained On", "Source", "Description", "Intended Use"]
+    for col, h in zip(cols, headers):
+        col.markdown(f"**{h}**")
+
+    for i, model in models_df.iterrows():
+        cols = st.columns([2, 2, 2, 2, 2, 2, 2])
+        highlight = "background-color: #E3F2FD;" if i == selected_index else ""
+        cols[0].markdown(f"<div style='{highlight}'>{model['name']}</div>", unsafe_allow_html=True)
+        cols[1].markdown(f"<div style='{highlight}'>{model['type']}</div>", unsafe_allow_html=True)
+        cols[2].markdown(f"<div style='{highlight}'>{model['size']}</div>", unsafe_allow_html=True)
+        cols[3].markdown(f"<div style='{highlight}'>{model['trained_on']}</div>", unsafe_allow_html=True)
+        cols[4].markdown(f"<div style='{highlight}'>{model['source']}</div>", unsafe_allow_html=True)
+        cols[5].markdown(f"<div style='{highlight}'>{model['description']}</div>", unsafe_allow_html=True)
+        cols[6].markdown(f"<div style='{highlight}'>{model['intended_use']}</div>", unsafe_allow_html=True)
+
+    return models_df.loc[selected_index]
+
     
 def parameter_table(param_dict, task_name, param_category, get_ideal_value, get_ideal_value_reason):
     """
