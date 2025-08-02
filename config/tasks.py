@@ -8,7 +8,7 @@ This file consolidates all task-related configurations in one place.
 import json
 import os
 from typing import Dict, Any, Optional, List
-from models_config import ENCODER_ONLY_MODELS, DECODER_ONLY_MODELS, ENCODER_DECODER_MODELS
+from config.models import ENCODER_ONLY_MODELS, DECODER_ONLY_MODELS, ENCODER_DECODER_MODELS
 
 # =============================================================================
 # PARAMETER CONFIGURATION LOADING
@@ -17,25 +17,25 @@ from models_config import ENCODER_ONLY_MODELS, DECODER_ONLY_MODELS, ENCODER_DECO
 def load_parameters_config() -> Dict[str, Any]:
     """Load the main parameters configuration from parameters.json."""
     try:
-        with open('parameters.json', 'r', encoding='utf-8') as f:
+        with open('config/parameters.json', 'r', encoding='utf-8') as f:
             return json.load(f)
     except FileNotFoundError:
-        print("Warning: parameters.json not found. Using empty configuration.")
+        print("Warning: config/parameters.json not found. Using empty configuration.")
         return {}
     except json.JSONDecodeError as e:
-        print(f"Error parsing parameters.json: {e}")
+        print(f"Error parsing config/parameters.json: {e}")
         return {}
 
 def load_task_param_overrides() -> Dict[str, Any]:
-    """Load task-specific parameter overrides from task_param_overrides.json."""
+    """Load task-specific parameter overrides from task_overrides.json."""
     try:
-        with open('task_param_overrides.json', 'r', encoding='utf-8') as f:
+        with open('config/task_overrides.json', 'r', encoding='utf-8') as f:
             return json.load(f)
     except FileNotFoundError:
-        print("Warning: task_param_overrides.json not found. Using empty configuration.")
+        print("Warning: config/task_overrides.json not found. Using empty configuration.")
         return {}
     except json.JSONDecodeError as e:
-        print(f"Error parsing task_param_overrides.json: {e}")
+        print(f"Error parsing config/task_overrides.json: {e}")
         return {}
 
 # Load configurations at module level

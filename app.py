@@ -1,6 +1,6 @@
 import streamlit as st
 import json
-from task_config import (
+from config.tasks import (
     get_available_tasks,
     get_task_ui_config,
     get_task_description,
@@ -12,12 +12,12 @@ from task_config import (
     get_ideal_value,
     get_ideal_value_reason
 )
-from models_config import (
+from config.models import (
     ENCODER_ONLY_MODELS,
     DECODER_ONLY_MODELS,
     ENCODER_DECODER_MODELS
 )
-from utils.ui_helper import display_compact_widgets_table, model_dropdown
+from utils.ui_utils import display_compact_widgets_table, model_dropdown
 
 st.set_page_config(page_title="🧠 GenAI Playground", layout="wide")
 st.title("🧠 GenAI Playground")

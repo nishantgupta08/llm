@@ -59,7 +59,7 @@ def run_streamlit_with_ngrok():
         
         # Start Streamlit in a subprocess with better error handling
         streamlit_process = subprocess.Popen([
-            sys.executable, "-m", "streamlit", "run", "ui.py",
+            sys.executable, "-m", "streamlit", "run", "app.py",
             "--server.port", str(port),
             "--server.address", "localhost",
             "--server.headless", "true",

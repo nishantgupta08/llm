@@ -1,5 +1,53 @@
 import streamlit as st
 
+def display_compact_widgets_table(param_list, title="Parameters", sidebar=False):
+    """
+    Display a compact table of parameters with widgets.
+    Returns dict of param.name -> value.
+    """
+    if sidebar:
+        st.sidebar.markdown(f"### {title}")
+    else:
+        st.markdown(f"### {title}")
+    
+    param_values = {}
+    for param in param_list:
+        key = f"{title}_{param.name}"
+        if getattr(param, "type", None) in ["dropdown", "select"]:
+            idx = param.options.index(param.ideal) if hasattr(param, "options") and param.ideal in param.options else 0
+            val = st.selectbox(param.label, param.options, index=idx, key=key)
+        elif param.type in ["slider"]:
+            minv = getattr(param, "min_value", getattr(param, "min", 0))
+            maxv = getattr(param, "max_value", getattr(param, "max", 100))
+            step = getattr(param, "step", 1)
+            value = param.ideal
+            val = st.slider(param.label, min_value=minv, max_value=maxv, value=value, step=step, key=key)
+        elif param.type in ["checkbox"]:
+            val = st.checkbox(param.label, value=param.ideal, key=key)
+        elif param.type in ["number"]:
+            minv = getattr(param, "min_value", getattr(param, "min", 0))
+            maxv = getattr(param, "max_value", getattr(param, "max", 100))
+            step = getattr(param, "step", 1)
+            value = param.ideal
+            val = st.number_input(param.label, min_value=minv, max_value=maxv, value=value, step=step, key=key)
+        else:
+            val = st.text_input(param.label, value=str(param.ideal), key=key)
+        param_values[param.name] = val
+    return param_values
+
+def model_dropdown(label, model_list, task=None):
+    """
+    Create a dropdown for model selection.
+    Returns the selected model name.
+    """
+    if not model_list:
+        st.warning("No models available.")
+        return None
+    
+    model_names = [m if isinstance(m, str) else m.name for m in model_list]
+    selected = st.selectbox(label, model_names)
+    return selected
+
 def render_param_table(param_list, title="Parameters"):
     """
     Render a table of parameters with widgets in the last column.

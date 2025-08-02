@@ -1,0 +1,7 @@
+"""
+Configuration package for the LLM application.
+Contains task configurations, model definitions, and parameter settings.
+"""
+
+from .tasks import *
+from .models import * 
