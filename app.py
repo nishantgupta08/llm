@@ -31,7 +31,10 @@ st.write(get_task_description(task))
 # --- Single-select checkbox model table
 st.subheader("Select a Model")
 # selected_model = single_select_checkbox_table(models_df)
-selected_model = single_select_radio_in_table(models_df)
+# selected_model = single_select_radio_in_table(models_df)
+from utils.ui_utils import aggrid_model_picker
+
+selected_model = aggrid_model_picker(models_df)
 
 st.success(f"**Selected model:** {selected_model['name']}")
 st.table(selected_model)
