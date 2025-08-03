@@ -27,8 +27,15 @@ import pandas as pd
 
 import streamlit as st
 
+import streamlit as st
+
+def make_reset_callback(val_key, ideal):
+    def callback():
+        st.session_state[val_key] = ideal
+    return callback
+
 def smart_param_table_with_reset(param_dict, title="Parameters"):
-    WIDTHS = [3, 4, 3, 4]  # Label, Info, Reason, Value+Reset
+    WIDTHS = [3, 4, 3, 4]
     st.markdown(f"### {title}")
     header_cols = st.columns(WIDTHS)
     for col, h in zip(header_cols, ["Label", "Info", "Reason", "Value"]):
@@ -37,17 +44,15 @@ def smart_param_table_with_reset(param_dict, title="Parameters"):
     param_values = {}
     for name, cfg in param_dict.items():
         row_cols = st.columns(WIDTHS)
-        # --- Label, Info, Reason columns ---
         with row_cols[0]: st.markdown(cfg.get("label", name))
         with row_cols[1]: st.markdown(cfg.get("info", ""))
         with row_cols[2]: st.markdown(str(cfg.get("ideal_value_reason", "")))
-        # --- Value widget + Reset ---
+
         val_key = f"{title}_{name}_val"
         reset_key = f"{title}_{name}_reset"
         ideal = cfg.get("ideal", "")
         typ = cfg.get("type", "text")
-
-        # State: current value for each param
+        # Only set the initial value if not yet set
         if val_key not in st.session_state:
             st.session_state[val_key] = ideal
 
@@ -77,10 +82,9 @@ def smart_param_table_with_reset(param_dict, title="Parameters"):
             else:
                 value = c_val.text_input(
                     "", value=str(st.session_state[val_key]), key=val_key, label_visibility="collapsed")
-            # -- Reset button --
-            if c_reset.button("⟲", key=reset_key, help="Reset to ideal value"):
-                st.session_state[val_key] = ideal
-                value = ideal
+            # -- Reset button with callback --
+            c_reset.button("⟲", key=reset_key, help="Reset to ideal value",
+                           on_click=make_reset_callback(val_key, ideal))
             param_values[name] = value
     return param_values
 
