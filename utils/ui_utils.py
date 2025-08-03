@@ -29,9 +29,14 @@ import streamlit as st
 
 import streamlit as st
 
-def make_reset_callback(val_key, ideal):
+def make_reset_callback(val_key, ideal, typ):
     def callback():
-        st.session_state[val_key] = ideal
+        if typ in ["number", "slider"]:
+            st.session_state[val_key] = int(ideal) if str(ideal).isdigit() else 0
+        elif typ == "checkbox":
+            st.session_state[val_key] = bool(ideal)
+        else:
+            st.session_state[val_key] = ideal
     return callback
 
 def smart_param_table_with_reset(param_dict, title="Parameters"):
@@ -52,41 +57,39 @@ def smart_param_table_with_reset(param_dict, title="Parameters"):
         reset_key = f"{title}_{name}_reset"
         ideal = cfg.get("ideal", "")
         typ = cfg.get("type", "text")
-        # Only set the initial value if not yet set
+
+        # Only set the initial value if not yet set, and cast to correct type
         if val_key not in st.session_state:
-            st.session_state[val_key] = ideal
+            if typ in ["number", "slider"]:
+                st.session_state[val_key] = int(ideal) if str(ideal).isdigit() else 0
+            elif typ == "checkbox":
+                st.session_state[val_key] = bool(ideal)
+            else:
+                st.session_state[val_key] = ideal
 
         with row_cols[3]:
             c_val, c_reset = st.columns([4, 1])
             # -- Widget --
             if typ in ("dropdown", "select") and cfg.get("options"):
                 options = cfg["options"]
-                idx = options.index(st.session_state[val_key]) if st.session_state[val_key] in options else 0
+                val = st.session_state[val_key]
+                idx = options.index(val) if val in options else 0
                 value = c_val.selectbox(
-                    "", options, index=idx, key=val_key, label_visibility="collapsed")
+                    "", options, index=idx, key=val_key, label_visibility="collapsed"
+                )
             elif typ == "slider":
-                minv = cfg.get("min_value", 0)
-                maxv = cfg.get("max_value", 100)
-                step = cfg.get("step", 1)
+                minv = int(cfg.get("min_value", 0))
+                maxv = int(cfg.get("max_value", 100))
+                step = int(cfg.get("step", 1))
+                try:
+                    val = int(st.session_state[val_key])
+                except Exception:
+                    val = minv
                 value = c_val.slider(
-                    "", min_value=minv, max_value=maxv, value=st.session_state[val_key], step=step, key=val_key, label_visibility="collapsed")
+                    "", min_value=minv, max_value=maxv, value=val, step=step, key=val_key, label_visibility="collapsed"
+                )
             elif typ == "checkbox":
-                value = c_val.checkbox(
-                    "", value=bool(st.session_state[val_key]), key=val_key, label_visibility="collapsed")
-            elif typ == "number":
-                minv = cfg.get("min_value", 0)
-                maxv = cfg.get("max_value", 100)
-                step = cfg.get("step", 1)
-                value = c_val.number_input(
-                    "", min_value=minv, max_value=maxv, value=st.session_state[val_key], step=step, key=val_key, label_visibility="collapsed")
-            else:
-                value = c_val.text_input(
-                    "", value=str(st.session_state[val_key]), key=val_key, label_visibility="collapsed")
-            # -- Reset button with callback --
-            c_reset.button("⟲", key=reset_key, help="Reset to ideal value",
-                           on_click=make_reset_callback(val_key, ideal))
-            param_values[name] = value
-    return param_values
+                value = c
 
 
 def smart_param_table(param_dict, key="param_grid"):
