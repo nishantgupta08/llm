@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 
+
 def parameter_table(param_dict, task_name, param_category, get_ideal_value, get_ideal_value_reason):
     """
     Renders parameters as a table: Label | Info | Ideal Value | Reason | Widget.
@@ -33,36 +34,72 @@ def parameter_table(param_dict, task_name, param_category, get_ideal_value, get_
                                        value=ideal or cfg.get("min_value", 0), step=cfg.get("step", 1), key=p)
             else:
                 value = st.text_input("", value=str(ideal or ""), key=p)
-            values[p] = value
+        values[p] = value
     return values
 
 
 def single_select_checkbox_table(models_df, key="model_select"):
     """
-    Display a table of models with a single-select checkbox per row.
+    Display a table of models with single-select checkboxes.
+    Only one checkbox can be selected at a time.
     Returns the selected model (as pd.Series).
     """
-    # Use session_state for remembering selection
-    selected_idx_key = f"{key}_idx"
-    if selected_idx_key not in st.session_state:
-        st.session_state[selected_idx_key] = 0
-    selected_idx = st.session_state[selected_idx_key]
-
+    # Initialize session state for tracking selection
+    selected_key = f"{key}_selected"
+    if selected_key not in st.session_state:
+        st.session_state[selected_key] = None
+    
+    # Display table headers
     cols = st.columns([1, 2, 2, 2, 2, 2, 2, 2])
     headers = ["Select", "Name", "Type", "Size", "Trained On", "Source", "Description", "Intended Use"]
     for col, h in zip(cols, headers):
         col.markdown(f"**{h}**")
-
-    for i, row in models_df.iterrows():
+    
+    selected_model = None
+    
+    # Display each model row
+    for i, model in models_df.iterrows():
         cols = st.columns([1, 2, 2, 2, 2, 2, 2, 2])
-        checked = i == selected_idx
-        if cols[0].checkbox("", value=checked, key=f"{key}_checkbox_{i}"):
-            st.session_state[selected_idx_key] = i
-            selected_idx = i
-        for j, k in enumerate(["name", "type", "size", "trained_on", "source", "description", "intended_use"], 1):
-            highlight = "background-color: #E3F2FD;" if i == selected_idx else ""
-            cols[j].markdown(f"<div style='{highlight}'>{row[k]}</div>", unsafe_allow_html=True)
-    return models_df.iloc[selected_idx]
+        
+        # Create unique key for this checkbox
+        checkbox_key = f"{key}_checkbox_{i}"
+        
+        # Determine if this checkbox should be checked
+        is_checked = st.session_state[selected_key] == i
+        
+        # Create the checkbox
+        if cols[0].checkbox("", value=is_checked, key=checkbox_key):
+            # If this checkbox is now checked, update selection
+            if st.session_state[selected_key] != i:
+                st.session_state[selected_key] = i
+                selected_model = model
+        else:
+            # If this checkbox is unchecked but was previously selected, keep it checked
+            if st.session_state[selected_key] == i:
+                # Force the checkbox to stay checked
+                st.session_state[checkbox_key] = True
+                selected_model = model
+        
+        # Highlight the selected row
+        highlight = "background-color: #E3F2FD;" if st.session_state[selected_key] == i else ""
+        
+        # Display model information
+        cols[1].markdown(f"<div style='{highlight}'><strong>{model['name']}</strong></div>", unsafe_allow_html=True)
+        cols[2].markdown(f"<div style='{highlight}'>{model['type']}</div>", unsafe_allow_html=True)
+        cols[3].markdown(f"<div style='{highlight}'>{model['size']}</div>", unsafe_allow_html=True)
+        cols[4].markdown(f"<div style='{highlight}'>{model['trained_on']}</div>", unsafe_allow_html=True)
+        cols[5].markdown(f"<div style='{highlight}'>{model['source']}</div>", unsafe_allow_html=True)
+        cols[6].markdown(f"<div style='{highlight}'>{model['description']}</div>", unsafe_allow_html=True)
+        cols[7].markdown(f"<div style='{highlight}'>{model['intended_use']}</div>", unsafe_allow_html=True)
+    
+    # Return the selected model
+    if selected_model is not None:
+        return selected_model
+    elif st.session_state[selected_key] is not None:
+        # Return the model from session state if no new selection was made
+        return models_df.iloc[st.session_state[selected_key]]
+    else:
+        return None
 
 
 def model_dropdown(label, model_list):
