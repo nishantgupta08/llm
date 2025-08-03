@@ -38,6 +38,41 @@ def parameter_table(param_dict, task_name, param_category, get_ideal_value, get_
     return values
 
 
+import streamlit as st
+import pandas as pd
+
+def single_select_radio_in_table(models_df, key="model_select"):
+    # Set a default selection
+    if f"{key}_selected_idx" not in st.session_state:
+        st.session_state[f"{key}_selected_idx"] = 0
+
+    # Draw table header
+    cols = st.columns([1, 2, 2, 2, 2, 2, 2, 2])
+    headers = ["Select", "Name", "Type", "Size", "Trained On", "Source", "Description", "Intended Use"]
+    for col, h in zip(cols, headers):
+        col.markdown(f"**{h}**")
+
+    # For each row, render a radio button in the first cell
+    selected_idx = st.session_state[f"{key}_selected_idx"]
+    for i, row in models_df.iterrows():
+        cols = st.columns([1, 2, 2, 2, 2, 2, 2, 2])
+        with cols[0]:
+            checked = (i == selected_idx)
+            if st.radio(
+                label="", options=[True, False],
+                index=0 if checked else 1, key=f"{key}_radio_{i}", horizontal=True,
+                label_visibility="collapsed"
+            ):
+                st.session_state[f"{key}_selected_idx"] = i
+                selected_idx = i  # Update to maintain sync in UI
+
+        highlight = "background-color: #E3F2FD;" if i == selected_idx else ""
+        for j, k in enumerate(["name", "type", "size", "trained_on", "source", "description", "intended_use"], 1):
+            cols[j].markdown(f"<div style='{highlight}'>{row[k]}</div>", unsafe_allow_html=True)
+
+    return models_df.iloc[selected_idx]
+
+
 def single_select_checkbox_table(models_df, key="model_select"):
     """
     Display a table of models with single-select checkboxes.
