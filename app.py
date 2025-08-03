@@ -3,12 +3,12 @@ import json
 import pandas as pd
 
 from core.task_config import (
-    get_available_tasks, get_task_config, get_task_param_blocks, get_task_parameters,
+    get_available_tasks, get_task_param_blocks, get_task_parameters,
     get_ideal_value, get_ideal_value_reason, get_task_description, get_task_icon
 )
-from utils.ui_utils import parameter_table, model_picker_table
+from utils.ui_utils import parameter_table, single_select_checkbox_table
 
-# --- Load all model metadata into a single DataFrame for the picker
+# --- Load models from JSON
 import os
 config_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "config")
 with open(os.path.join(config_dir, "models.json")) as f:
@@ -25,19 +25,16 @@ st.title("🧠 GenAI Playground")
 
 tasks = get_available_tasks()
 task = st.sidebar.selectbox("Choose Task", tasks)
-
-# Task info
 st.markdown(f"### {get_task_icon(task)} {task}")
 st.write(get_task_description(task))
 
-# --- Model selection with radio table ---
+# --- Single-select checkbox model table
 st.subheader("Select a Model")
-selected_model = model_picker_table(models_df)
-if selected_model is not None:
-    st.success(f"**Selected model:** {selected_model['name']}")
-    st.table(selected_model)
+selected_model = single_select_checkbox_table(models_df)
+st.success(f"**Selected model:** {selected_model['name']}")
+st.table(selected_model)
 
-# --- Parameter blocks ---
+# --- Parameter tables
 for block in get_task_param_blocks(task):
     param_type = f"{block}_parameters"
     params = get_task_parameters(task, param_type)
