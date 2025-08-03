@@ -36,8 +36,12 @@ from utils.ui_utils import aggrid_model_picker
 
 selected_model = aggrid_model_picker(models_df)
 
-st.success(f"**Selected model:** {selected_model['name']}")
-st.table(selected_model)
+if selected_model is not None:
+    st.success(f"**Selected model:** {selected_model['name']}")
+    st.write(selected_model)
+else:
+    st.info("Please select a model from the table above.")
+
 
 # --- Parameter tables
 for block in get_task_param_blocks(task):
