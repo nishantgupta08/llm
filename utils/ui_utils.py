@@ -42,36 +42,33 @@ import streamlit as st
 import pandas as pd
 
 def single_select_radio_in_table(models_df, key="model_select"):
-    # Set a default selection
-    if f"{key}_selected_idx" not in st.session_state:
-        st.session_state[f"{key}_selected_idx"] = 0
-
-    # Draw table header
+        # Build labels for the radio buttons (could be empty or custom)
+    radio_labels = ["" for _ in models_df.index]
+    selected_idx = st.radio(
+        label="Select a model",
+        options=list(models_df.index),
+        format_func=lambda i: "",
+        index=0,
+        key=key
+    )
+    # Draw the table header (no header for first column, which is radio)
     cols = st.columns([1, 2, 2, 2, 2, 2, 2, 2])
-    headers = ["Select", "Name", "Type", "Size", "Trained On", "Source", "Description", "Intended Use"]
+    headers = ["", "Name", "Type", "Size", "Trained On", "Source", "Description", "Intended Use"]
     for col, h in zip(cols, headers):
         col.markdown(f"**{h}**")
-
-    # For each row, render a radio button in the first cell
-    selected_idx = st.session_state[f"{key}_selected_idx"]
+    # For each row, show radio button as part of first column and highlight selection
     for i, row in models_df.iterrows():
         cols = st.columns([1, 2, 2, 2, 2, 2, 2, 2])
+        # Place a fake "selected" radio icon (just visual), since st.radio only renders the selection group above
         with cols[0]:
-            checked = (i == selected_idx)
-            if st.radio(
-                label="", options=[True, False],
-                index=0 if checked else 1, key=f"{key}_radio_{i}", horizontal=True,
-                label_visibility="collapsed"
-            ):
-                st.session_state[f"{key}_selected_idx"] = i
-                selected_idx = i  # Update to maintain sync in UI
-
+            if i == selected_idx:
+                st.markdown("🔘")
+            else:
+                st.markdown("⚪️")
         highlight = "background-color: #E3F2FD;" if i == selected_idx else ""
         for j, k in enumerate(["name", "type", "size", "trained_on", "source", "description", "intended_use"], 1):
             cols[j].markdown(f"<div style='{highlight}'>{row[k]}</div>", unsafe_allow_html=True)
-
-    return models_df.iloc[selected_idx]
-
+    return models_df.loc[selected_idx]
 
 def single_select_checkbox_table(models_df, key="model_select"):
     """
