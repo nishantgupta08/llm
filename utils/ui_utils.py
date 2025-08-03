@@ -22,6 +22,55 @@ def aggrid_model_picker(models_df, key="aggrid_model_picker"):
     elif isinstance(sel, list) and sel:
         return sel[0]
     return None
+from st_aggrid import AgGrid, GridOptionsBuilder, GridUpdateMode
+import pandas as pd
+
+def smart_param_table(param_dict, key="param_grid"):
+    # Convert dict to DataFrame
+    rows = []
+    for name, cfg in param_dict.items():
+        row = {
+            "Parameter": cfg.get("label", name),
+            "Info": cfg.get("info", ""),
+            "Ideal": cfg.get("ideal", ""),
+            "Reason": cfg.get("ideal_value_reason", ""),
+            "Value": cfg.get("ideal", ""),
+            "Type": cfg.get("type", ""),
+            "Options": cfg.get("options", []),
+            "Min": cfg.get("min_value", 0),
+            "Max": cfg.get("max_value", 100),
+            "Step": cfg.get("step", 1),
+        }
+        rows.append(row)
+    df = pd.DataFrame(rows)
+
+    gb = GridOptionsBuilder.from_dataframe(df)
+    for i, row in df.iterrows():
+        typ = row["Type"]
+        if typ in ("dropdown", "select") and row["Options"]:
+            gb.configure_column("Value", editable=True, cellEditor='agSelectCellEditor',
+                               cellEditorParams={'values': row["Options"]})
+        elif typ == "checkbox":
+            gb.configure_column("Value", editable=True, cellEditor='agCheckboxCellEditor')
+        elif typ == "slider":
+            gb.configure_column("Value", editable=True, type=["numericColumn", "numberColumnFilter", "customNumericFormat"], precision=2)
+        elif typ == "number":
+            gb.configure_column("Value", editable=True, type=["numericColumn", "numberColumnFilter", "customNumericFormat"], precision=2)
+        else:
+            gb.configure_column("Value", editable=True)
+    grid_options = gb.build()
+    grid_return = AgGrid(
+        df,
+        gridOptions=grid_options,
+        update_mode=GridUpdateMode.VALUE_CHANGED,
+        allow_unsafe_jscode=True,
+        key=key,
+        fit_columns_on_grid_load=True,
+        reload_data=True
+    )
+    out_df = grid_return["data"]
+    # Return dict of param label (or name) to value
+    return dict(zip(df["Parameter"], out_df["Value"]))
 
 def aggrid_param_table(param_dict, key="aggrid_param_table"):
     """
