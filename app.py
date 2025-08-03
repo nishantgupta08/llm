@@ -43,5 +43,7 @@ for block in get_task_param_blocks(task):
     params = get_task_parameters(task, param_type)
     if params:
         st.subheader(block.capitalize())
-        param_values = smart_param_table(params, key=f"param_{block}")
+        # param_values = smart_param_table(params, key=f"param_{block}")
+        param_values = smart_param_table_with_reset(params, title=block.capitalize())
+
         st.write(f"Values for {block}:", param_values)
