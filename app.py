@@ -7,7 +7,7 @@ from core.task_config import (
     get_available_tasks, get_task_param_blocks, get_task_parameters,
     get_task_description, get_task_icon
 )
-from utils.ui_utils import aggrid_model_picker, aggrid_param_table
+from utils.ui_utils import aggrid_model_picker, smart_param_table
 
 # --- Load models from JSON
 config_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "config")
@@ -28,7 +28,7 @@ task = st.sidebar.selectbox("Choose Task", tasks)
 st.markdown(f"### {get_task_icon(task)} {task}")
 st.write(get_task_description(task))
 
-# --- AgGrid model picker
+# --- Model selection with AgGrid
 st.subheader("Select a Model")
 selected_model = aggrid_model_picker(models_df)
 if selected_model is not None:
@@ -43,5 +43,5 @@ for block in get_task_param_blocks(task):
     params = get_task_parameters(task, param_type)
     if params:
         st.subheader(block.capitalize())
-        param_values = aggrid_param_table(params, key=f"param_{block}")
+        param_values = smart_param_table(params, key=f"param_{block}")
         st.write(f"Values for {block}:", param_values)
