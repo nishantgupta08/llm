@@ -6,7 +6,7 @@ from core.task_config import (
     get_available_tasks, get_task_param_blocks, get_task_parameters,
     get_ideal_value, get_ideal_value_reason, get_task_description, get_task_icon
 )
-from utils.ui_utils import parameter_table, single_select_checkbox_table
+from utils.ui_utils import parameter_table, single_select_checkbox_table,single_select_radio_in_table
 
 # --- Load models from JSON
 import os
@@ -30,7 +30,9 @@ st.write(get_task_description(task))
 
 # --- Single-select checkbox model table
 st.subheader("Select a Model")
-selected_model = single_select_checkbox_table(models_df)
+# selected_model = single_select_checkbox_table(models_df)
+selected_model = single_select_radio_in_table(models_df)
+
 st.success(f"**Selected model:** {selected_model['name']}")
 st.table(selected_model)
 
