@@ -23,11 +23,9 @@
     },
     "batch_size": {
       "label": "Batch Size",
-      "type": "number",
+      "type": "dropdown",
       "value_type": "int",
-      "min_value": 1,
-      "max_value": 1024,
-      "step": 1,
+      "options": [1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024],
       "info": "Number of samples to encode per batch. Higher is faster if enough memory."
     },
     "fp16": {
