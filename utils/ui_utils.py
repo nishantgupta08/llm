@@ -25,6 +25,66 @@ def aggrid_model_picker(models_df, key="aggrid_model_picker"):
 from st_aggrid import AgGrid, GridOptionsBuilder, GridUpdateMode
 import pandas as pd
 
+import streamlit as st
+
+def smart_param_table_with_reset(param_dict, title="Parameters"):
+    WIDTHS = [3, 4, 3, 4]  # Label, Info, Reason, Value+Reset
+    st.markdown(f"### {title}")
+    header_cols = st.columns(WIDTHS)
+    for col, h in zip(header_cols, ["Label", "Info", "Reason", "Value"]):
+        col.markdown(f"**{h}**")
+
+    param_values = {}
+    for name, cfg in param_dict.items():
+        row_cols = st.columns(WIDTHS)
+        # --- Label, Info, Reason columns ---
+        with row_cols[0]: st.markdown(cfg.get("label", name))
+        with row_cols[1]: st.markdown(cfg.get("info", ""))
+        with row_cols[2]: st.markdown(str(cfg.get("ideal_value_reason", "")))
+        # --- Value widget + Reset ---
+        val_key = f"{title}_{name}_val"
+        reset_key = f"{title}_{name}_reset"
+        ideal = cfg.get("ideal", "")
+        typ = cfg.get("type", "text")
+
+        # State: current value for each param
+        if val_key not in st.session_state:
+            st.session_state[val_key] = ideal
+
+        with row_cols[3]:
+            c_val, c_reset = st.columns([4, 1])
+            # -- Widget --
+            if typ in ("dropdown", "select") and cfg.get("options"):
+                options = cfg["options"]
+                idx = options.index(st.session_state[val_key]) if st.session_state[val_key] in options else 0
+                value = c_val.selectbox(
+                    "", options, index=idx, key=val_key, label_visibility="collapsed")
+            elif typ == "slider":
+                minv = cfg.get("min_value", 0)
+                maxv = cfg.get("max_value", 100)
+                step = cfg.get("step", 1)
+                value = c_val.slider(
+                    "", min_value=minv, max_value=maxv, value=st.session_state[val_key], step=step, key=val_key, label_visibility="collapsed")
+            elif typ == "checkbox":
+                value = c_val.checkbox(
+                    "", value=bool(st.session_state[val_key]), key=val_key, label_visibility="collapsed")
+            elif typ == "number":
+                minv = cfg.get("min_value", 0)
+                maxv = cfg.get("max_value", 100)
+                step = cfg.get("step", 1)
+                value = c_val.number_input(
+                    "", min_value=minv, max_value=maxv, value=st.session_state[val_key], step=step, key=val_key, label_visibility="collapsed")
+            else:
+                value = c_val.text_input(
+                    "", value=str(st.session_state[val_key]), key=val_key, label_visibility="collapsed")
+            # -- Reset button --
+            if c_reset.button("⟲", key=reset_key, help="Reset to ideal value"):
+                st.session_state[val_key] = ideal
+                value = ideal
+            param_values[name] = value
+    return param_values
+
+
 def smart_param_table(param_dict, key="param_grid"):
     # Convert dict to DataFrame
     rows = []
