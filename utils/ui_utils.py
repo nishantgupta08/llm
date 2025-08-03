@@ -39,6 +39,7 @@ def make_reset_callback(val_key, ideal, typ):
             st.session_state[val_key] = ideal
     return callback
 
+
 def smart_param_table_with_reset(param_dict, title="Parameters"):
     WIDTHS = [3, 4, 3, 4]
     st.markdown(f"### {title}")
@@ -89,7 +90,29 @@ def smart_param_table_with_reset(param_dict, title="Parameters"):
                     "", min_value=minv, max_value=maxv, value=val, step=step, key=val_key, label_visibility="collapsed"
                 )
             elif typ == "checkbox":
-                value = c
+                value = c_val.checkbox(
+                    "", value=bool(st.session_state[val_key]), key=val_key, label_visibility="collapsed"
+                )
+            elif typ == "number":
+                minv = int(cfg.get("min_value", 0))
+                maxv = int(cfg.get("max_value", 100))
+                step = int(cfg.get("step", 1))
+                try:
+                    val = int(st.session_state[val_key])
+                except Exception:
+                    val = minv
+                value = c_val.number_input(
+                    "", min_value=minv, max_value=maxv, value=val, step=step, key=val_key, label_visibility="collapsed"
+                )
+            else:
+                value = c_val.text_input(
+                    "", value=str(st.session_state[val_key]), key=val_key, label_visibility="collapsed"
+                )
+            # -- Reset button with callback --
+            c_reset.button("⟲", key=reset_key, help="Reset to ideal value",
+                           on_click=make_reset_callback(val_key, ideal, typ))
+            param_values[name] = value
+    return param_values
 
 
 def smart_param_table(param_dict, key="param_grid"):
