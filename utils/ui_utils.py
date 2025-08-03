@@ -36,29 +36,34 @@ def parameter_table(param_dict, task_name, param_category, get_ideal_value, get_
             values[p] = value
     return values
 
-def model_picker_table(models_df, key="model_picker"):
+
+def single_select_checkbox_table(models_df, key="model_select"):
     """
-    Display an interactive model table with a single radio button for selection.
+    Display a table of models with a single-select checkbox per row.
     Returns the selected model (as pd.Series).
     """
-    model_names = [f"{row['name']} ({row['type']})" for _, row in models_df.iterrows()]
-    selected_idx = st.radio("Select a model:", options=list(models_df.index),
-                            format_func=lambda i: model_names[i], key=key)
+    # Use session_state for remembering selection
+    selected_idx_key = f"{key}_idx"
+    if selected_idx_key not in st.session_state:
+        st.session_state[selected_idx_key] = 0
+    selected_idx = st.session_state[selected_idx_key]
+
     cols = st.columns([1, 2, 2, 2, 2, 2, 2, 2])
-    headers = ["", "Name", "Type", "Size", "Trained On", "Source", "Description", "Intended Use"]
+    headers = ["Select", "Name", "Type", "Size", "Trained On", "Source", "Description", "Intended Use"]
     for col, h in zip(cols, headers):
         col.markdown(f"**{h}**")
+
     for i, row in models_df.iterrows():
         cols = st.columns([1, 2, 2, 2, 2, 2, 2, 2])
-        with cols[0]:
-            if i == selected_idx:
-                st.markdown(":radio_button:", unsafe_allow_html=True)
-            else:
-                st.markdown("○", unsafe_allow_html=True)
-        highlight = "background-color: #E3F2FD;" if i == selected_idx else ""
-        for j, colname in enumerate(["name", "type", "size", "trained_on", "source", "description", "intended_use"], 1):
-            cols[j].markdown(f"<div style='{highlight}'>{row[colname]}</div>", unsafe_allow_html=True)
-    return models_df.loc[selected_idx]
+        checked = i == selected_idx
+        if cols[0].checkbox("", value=checked, key=f"{key}_checkbox_{i}"):
+            st.session_state[selected_idx_key] = i
+            selected_idx = i
+        for j, k in enumerate(["name", "type", "size", "trained_on", "source", "description", "intended_use"], 1):
+            highlight = "background-color: #E3F2FD;" if i == selected_idx else ""
+            cols[j].markdown(f"<div style='{highlight}'>{row[k]}</div>", unsafe_allow_html=True)
+    return models_df.iloc[selected_idx]
+
 
 def model_dropdown(label, model_list):
     """Dropdown for model selection. Works for dict or str models."""
