@@ -40,6 +40,41 @@ def parameter_table(param_dict, task_name, param_category, get_ideal_value, get_
 
 import streamlit as st
 import pandas as pd
+import streamlit as st
+import pandas as pd
+from st_aggrid import AgGrid, GridOptionsBuilder, GridUpdateMode
+
+def aggrid_model_picker(models_df, key="aggrid_model_picker"):
+    gb = GridOptionsBuilder.from_dataframe(models_df)
+    gb.configure_selection(selection_mode="single", use_checkbox=True)
+    gb.configure_column("name", header_name="Name", width=180)
+    gb.configure_column("type", header_name="Type", width=90)
+    gb.configure_column("size", header_name="Size", width=80)
+    gb.configure_column("trained_on", header_name="Trained On", width=140)
+    gb.configure_column("source", header_name="Source", width=140)
+    gb.configure_column("description", header_name="Description", width=230)
+    gb.configure_column("intended_use", header_name="Intended Use", width=140)
+
+    grid_options = gb.build()
+    grid_return = AgGrid(
+        models_df,
+        gridOptions=grid_options,
+        update_mode=GridUpdateMode.SELECTION_CHANGED,
+        allow_unsafe_jscode=True,
+        key=key,
+        height=min(500, 50 + 35 * len(models_df)),
+        fit_columns_on_grid_load=False,
+    )
+    # grid_return["selected_rows"] is a list of dicts (each dict is a selected row)
+    selected = grid_return["selected_rows"][0] if grid_return["selected_rows"] else None
+    return selected
+
+# Example usage:
+# models_df = pd.DataFrame(all_models)
+# selected_model = aggrid_model_picker(models_df)
+# if selected_model:
+#     st.success(f"Selected model: {selected_model['name']}")
+#     st.write(selected_model)
 
 def single_select_radio_in_table(models_df, key="model_select"):
         # Build labels for the radio buttons (could be empty or custom)
