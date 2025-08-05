@@ -6,12 +6,12 @@
       "value_type": "str",
       "options": ["mean", "max", "cls", "sum", "attention", "last"],
       "info": "How to pool token embeddings into a single vector representation. Use 'mean' for average context, 'max' for strongest signal, 'cls' for [CLS] token, 'attention' for attention-based pooling, 'last' for last hidden state.",
-      "range": "['mean', 'max', 'cls', 'sum', 'attention', 'last']"
     },
     "normalize": {
       "label": "Normalize Embeddings",
-      "type": "checkbox",
-      "value_type": "bool",
+      "type": "dropdown",
+      "value_type": "str",
+      "options": ["l1", "l2", "none","z-score","min-max"],
       "info": "Apply L2 normalization to output embeddings. Recommended for cosine similarity."
     },
     "device": {
