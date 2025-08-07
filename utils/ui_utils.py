@@ -74,6 +74,7 @@ def smart_param_table_with_reset(param_dict, title="Parameters"):
             if typ in ("dropdown", "select") and cfg.get("options"):
                 options = cfg["options"]
                 val = st.session_state[val_key]
+                
                 idx = options.index(val) if val in options else 0
                 value = c_val.selectbox(
                     "", options, index=idx, key=val_key, label_visibility="collapsed"
@@ -81,11 +82,18 @@ def smart_param_table_with_reset(param_dict, title="Parameters"):
             elif typ == "slider":
                 minv = int(cfg.get("min_value", 0))
                 maxv = int(cfg.get("max_value", 100))
-                step = int(cfg.get("step", 1))
+                step = max(1, int(cfg.get("step", 1)))
                 try:
                     val = int(st.session_state[val_key])
+                    
                 except Exception:
                     val = minv
+
+                if val < minv:
+                    val = minv
+                elif val > maxv:
+                    val = maxv
+
                 value = c_val.slider(
                     "", min_value=minv, max_value=maxv, value=val, step=step, key=val_key, label_visibility="collapsed"
                 )
@@ -96,13 +104,18 @@ def smart_param_table_with_reset(param_dict, title="Parameters"):
             elif typ == "number":
                 minv = int(cfg.get("min_value", 0))
                 maxv = int(cfg.get("max_value", 100))
-                step = int(cfg.get("step", 1))
+                step = max(1, int(cfg.get("step", 1)))
                 try:
                     val = int(st.session_state[val_key])
                 except Exception:
                     val = minv
+                
+                if val < minv:
+                    val = minv
+                elif val > maxv:
+                    val = maxv
                 value = c_val.number_input(
-                    "", min_value=minv, max_value=maxv, value=val, step=step, key=val_key, label_visibility="collapsed"
+                    "Enter a value", min_value=minv, max_value=maxv, value=val, step=step, label_visibility="collapsed"
                 )
             else:
                 value = c_val.text_input(
