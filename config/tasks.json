@@ -1,0 +1,11 @@
+{
+    "RAG-based QA": {
+        "blocks": ["preprocessing", "encoding", "decoding"]
+    },
+    "Normal QA": {
+        "blocks": ["preprocessing", "encoder_decoder"]
+    },
+    "Summarisation": {
+        "blocks": ["preprocessing",  "encoder_decoder"]
+    }
+}

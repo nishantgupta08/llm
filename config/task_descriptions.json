@@ -1,0 +1,17 @@
+{
+    "RAG-based QA": {
+        "description": "Retrieval-Augmented Generation for question answering using document context",
+        "icon": "🔍",
+        "long_description": "Upload documents and ask questions. The system will retrieve relevant context and generate answers based on the document content."
+    },
+    "Normal QA": {
+        "description": "Direct question answering without document retrieval",
+        "icon": "❓",
+        "long_description": "Ask questions directly to the model without providing additional context documents."
+    },
+    "Summarisation": {
+        "description": "Generate concise summaries of input text",
+        "icon": "📝",
+        "long_description": "Upload documents or input text to generate summaries of varying lengths and styles."
+    }
+}
