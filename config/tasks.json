@@ -3,9 +3,9 @@
         "blocks": ["preprocessing", "encoding", "decoding"]
     },
     "Normal QA": {
-        "blocks": ["preprocessing", "encoder_decoder"]
+        "blocks": ["encoding", "decoding"]
     },
     "Summarisation": {
-        "blocks": ["preprocessing",  "encoder_decoder"]
+        "blocks": ["encoding", "decoding"]
     }
 }
