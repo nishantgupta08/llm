@@ -58,32 +58,6 @@ elif task in ("Normal QA", "Summarisation"):
         st.success(f"Selected encoder-decoder: {selected_encoder_decoder['name']}")
         st.write(selected_encoder_decoder)
 
-# --- Model selection with AgGrid
-st.subheader("Select a Model")
-selected_model = aggrid_model_picker(models_df)
-if selected_model is not None:
-    st.success(f"**Selected model:** {selected_model['name']}")
-    st.write(selected_model)
-
-    # --- Show relevant selection options based on model type ---
-    encoder_names = [m['name'] for m in models_json.get('ENCODER_ONLY_MODELS', [])]
-    decoder_names = [m['name'] for m in models_json.get('DECODER_ONLY_MODELS', [])]
-    encoder_decoder_names = [m['name'] for m in models_json.get('ENCODER_DECODER_MODELS', [])]
-
-    if selected_model['name'] in encoder_names:
-        st.info('You have selected an **Encoder** model. Configure encoder options below.')
-        # Place encoder-specific options here if needed
-    elif selected_model['name'] in decoder_names:
-        st.info('You have selected a **Decoder** model. Configure decoder options below.')
-        # Place decoder-specific options here if needed
-    elif selected_model['name'] in encoder_decoder_names:
-        st.info('You have selected an **Encoder-Decoder** model. Configure encoder-decoder options below.')
-        # Place encoder-decoder-specific options here if needed
-    else:
-        st.warning('Unknown model type.')
-else:
-    st.info("Please select a model from the table above.")
-
 # --- Editable parameter tables with AgGrid
 for block in get_task_param_blocks(task):
     param_type = f"{block}_parameters"
