@@ -37,18 +37,26 @@ selected_encoder = selected_decoder = selected_encoder_decoder = None
 
 if task == "RAG-based QA":
     st.subheader("Select an Encoder Model")
-    selected_encoder = st.selectbox(
-        "Encoder Model", [m['name'] for m in encoder_models], key="encoder_model_select"
-    )
+    encoder_df = pd.DataFrame(encoder_models)
+    selected_encoder = aggrid_model_picker(encoder_df, key="aggrid_encoder_model_picker")
+    if selected_encoder:
+        st.success(f"Selected encoder: {selected_encoder['name']}")
+        st.write(selected_encoder)
+
     st.subheader("Select a Decoder Model")
-    selected_decoder = st.selectbox(
-        "Decoder Model", [m['name'] for m in decoder_models], key="decoder_model_select"
-    )
+    decoder_df = pd.DataFrame(decoder_models)
+    selected_decoder = aggrid_model_picker(decoder_df, key="aggrid_decoder_model_picker")
+    if selected_decoder:
+        st.success(f"Selected decoder: {selected_decoder['name']}")
+        st.write(selected_decoder)
+
 elif task in ("Normal QA", "Summarisation"):
     st.subheader("Select an Encoder-Decoder Model")
-    selected_encoder_decoder = st.selectbox(
-        "Encoder-Decoder Model", [m['name'] for m in encoder_decoder_models], key="encoder_decoder_model_select"
-    )
+    encoder_decoder_df = pd.DataFrame(encoder_decoder_models)
+    selected_encoder_decoder = aggrid_model_picker(encoder_decoder_df, key="aggrid_encoder_decoder_model_picker")
+    if selected_encoder_decoder:
+        st.success(f"Selected encoder-decoder: {selected_encoder_decoder['name']}")
+        st.write(selected_encoder_decoder)
 
 # --- Model selection with AgGrid
 st.subheader("Select a Model")
