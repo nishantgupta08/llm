@@ -729,7 +729,7 @@ def get_parameter_documentation(param_name, block, doc_data):
 
 def display_parameter_doc_sidebar(param_doc):
     """
-    Display parameter documentation in a compact sidebar format
+    Display parameter documentation in a compact sidebar format with interactive widgets
     """
     # Description
     if param_doc.get('description'):
@@ -748,22 +748,134 @@ def display_parameter_doc_sidebar(param_doc):
         if len(param_doc['use_cases']) > 3:
             st.markdown(f"*... and {len(param_doc['use_cases']) - 3} more*")
     
-    # Options (for parameters with multiple options)
+    # Options (for parameters with multiple options) - with interactive widgets
     if param_doc.get('options'):
         st.markdown("**Available Options:**")
-        for option_key, option_info in param_doc['options'].items():
-            with st.expander(f"**{option_info.get('name', option_key)}**", expanded=False):
-                st.markdown(option_info.get('description', ''))
+        
+        # Create a selectbox for option selection
+        option_names = list(param_doc['options'].keys())
+        option_labels = [param_doc['options'][key].get('name', key) for key in option_names]
+        
+        selected_option = st.selectbox(
+            "Select an option:",
+            option_labels,
+            key=f"option_selector_{param_doc.get('name', 'param')}"
+        )
+        
+        # Show details for selected option
+        selected_option_key = option_names[option_labels.index(selected_option)]
+        option_info = param_doc['options'][selected_option_key]
+        
+        with st.expander(f"**{option_info.get('name', selected_option_key)}**", expanded=True):
+            st.markdown(option_info.get('description', ''))
+            
+            if option_info.get('mathematical_definition'):
+                st.markdown("**Mathematical Definition:**")
+                st.code(option_info['mathematical_definition'], language='text')
+            
+            if option_info.get('use_cases'):
+                st.markdown("**Use Cases:**")
+                for use_case in option_info['use_cases']:
+                    st.markdown(f"• {use_case}")
+            
+            if option_info.get('advantages'):
+                st.markdown("**Advantages:**")
+                for advantage in option_info['advantages']:
+                    st.markdown(f"✅ {advantage}")
+            
+            if option_info.get('disadvantages'):
+                st.markdown("**Disadvantages:**")
+                for disadvantage in option_info['disadvantages']:
+                    st.markdown(f"❌ {disadvantage}")
+            
+            if option_info.get('recommended_for'):
+                st.markdown("**Recommended For:**")
+                for rec in option_info['recommended_for']:
+                    st.markdown(f"🎯 {rec}")
+            
+            if option_info.get('not_recommended_for'):
+                st.markdown("**Not Recommended For:**")
+                for not_rec in option_info['not_recommended_for']:
+                    st.markdown(f"⚠️ {not_rec}")
+    
+    # Interactive widgets for parameter values
+    st.markdown("---")
+    st.markdown("**Parameter Configuration:**")
+    
+    # Determine parameter type and create appropriate widget
+    param_name = param_doc.get('name', 'parameter')
+    
+    # Check if this is a boolean parameter (like FP16)
+    if 'precision' in param_name.lower() or 'fp16' in param_name.lower():
+        # Checkbox for boolean parameters
+        value = st.checkbox(
+            f"Enable {param_name}",
+            value=False,
+            key=f"widget_{param_name}"
+        )
+        st.markdown(f"**Current Value:** {value}")
+    
+    # Check if this has recommended values for sliders
+    elif param_doc.get('recommended_values'):
+        # Create slider based on recommended values
+        if isinstance(param_doc['recommended_values'], dict):
+            # Find a numeric range from recommended values
+            numeric_values = []
+            for category, values in param_doc['recommended_values'].items():
+                if isinstance(values, list):
+                    numeric_values.extend(values)
+                elif isinstance(values, (int, float)):
+                    numeric_values.append(values)
+            
+            if numeric_values:
+                min_val = min(numeric_values)
+                max_val = max(numeric_values)
+                default_val = numeric_values[0] if numeric_values else min_val
                 
-                if option_info.get('advantages'):
-                    st.markdown("**Advantages:**")
-                    for advantage in option_info['advantages'][:2]:  # Show first 2
-                        st.markdown(f"✅ {advantage}")
-                
-                if option_info.get('disadvantages'):
-                    st.markdown("**Disadvantages:**")
-                    for disadvantage in option_info['disadvantages'][:2]:  # Show first 2
-                        st.markdown(f"❌ {disadvantage}")
+                value = st.slider(
+                    f"Select {param_name}:",
+                    min_value=float(min_val),
+                    max_value=float(max_val),
+                    value=float(default_val),
+                    step=0.1 if any(isinstance(v, float) for v in numeric_values) else 1.0,
+                    key=f"widget_{param_name}"
+                )
+                st.markdown(f"**Current Value:** {value}")
+            else:
+                # Fallback to text input
+                value = st.text_input(
+                    f"Enter {param_name}:",
+                    value="",
+                    key=f"widget_{param_name}"
+                )
+        else:
+            value = st.text_input(
+                f"Enter {param_name}:",
+                value="",
+                key=f"widget_{param_name}"
+            )
+    
+    # Check if this has options for dropdown
+    elif param_doc.get('options'):
+        # Dropdown for parameters with options
+        option_names = list(param_doc['options'].keys())
+        option_labels = [param_doc['options'][key].get('name', key) for key in option_names]
+        
+        value = st.selectbox(
+            f"Select {param_name}:",
+            option_labels,
+            key=f"widget_{param_name}"
+        )
+        st.markdown(f"**Current Value:** {value}")
+    
+    else:
+        # Default text input
+        value = st.text_input(
+            f"Enter {param_name}:",
+            value="",
+            key=f"widget_{param_name}"
+        )
+        st.markdown(f"**Current Value:** {value}")
     
     # Advantages and disadvantages
     if param_doc.get('advantages'):
