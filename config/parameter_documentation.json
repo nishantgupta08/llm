@@ -1,0 +1,1165 @@
+{
+  "pooling_strategies": {
+    "mean": {
+      "name": "Mean Pooling",
+      "description": "Takes the average of all token embeddings in the sequence",
+      "mathematical_definition": "output = (1/n) * Σ(token_embeddings)",
+      "use_cases": [
+        "Document similarity and retrieval",
+        "General-purpose embeddings",
+        "When you want balanced representation"
+      ],
+      "advantages": [
+        "Handles variable sequence lengths well",
+        "Provides balanced representation",
+        "Computationally efficient",
+        "Works well for most NLP tasks"
+      ],
+      "disadvantages": [
+        "May dilute important tokens",
+        "Can lose fine-grained information",
+        "Not optimal for classification tasks"
+      ],
+      "recommended_for": [
+        "Semantic search",
+        "Document clustering",
+        "General text embeddings"
+      ],
+      "not_recommended_for": [
+        "Classification tasks",
+        "When specific tokens are crucial"
+      ]
+    },
+    "max": {
+      "name": "Max Pooling",
+      "description": "Takes the element-wise maximum across all token embeddings",
+      "mathematical_definition": "output[i] = max(token_embeddings[:, i])",
+      "use_cases": [
+        "Sentiment analysis",
+        "Key phrase detection",
+        "Classification tasks"
+      ],
+      "advantages": [
+        "Preserves strongest features",
+        "Good for classification",
+        "Captures important signals"
+      ],
+      "disadvantages": [
+        "May lose context",
+        "Sensitive to outliers",
+        "Can ignore important but subtle features"
+      ],
+      "recommended_for": [
+        "Binary classification",
+        "Sentiment analysis",
+        "Feature extraction"
+      ],
+      "not_recommended_for": [
+        "Semantic similarity",
+        "When context matters"
+      ]
+    },
+    "cls": {
+      "name": "CLS Token Pooling",
+      "description": "Uses the [CLS] token embedding (classification token)",
+      "mathematical_definition": "output = cls_token_embedding",
+      "use_cases": [
+        "BERT/RoBERTa models",
+        "Classification tasks",
+        "Sentence-level tasks"
+      ],
+      "advantages": [
+        "Model-optimized for classification",
+        "Captures global context",
+        "Consistent representation"
+      ],
+      "disadvantages": [
+        "Only works with models that have CLS tokens",
+        "May not work with all architectures"
+      ],
+      "recommended_for": [
+        "BERT-based models",
+        "Classification tasks",
+        "Sentence-level embeddings"
+      ],
+      "not_recommended_for": [
+        "Non-BERT models",
+        "Token-level tasks"
+      ]
+    },
+    "sum": {
+      "name": "Sum Pooling",
+      "description": "Sums all token embeddings",
+      "mathematical_definition": "output = Σ(token_embeddings)",
+      "use_cases": [
+        "Short texts",
+        "When all tokens matter equally"
+      ],
+      "advantages": [
+        "Preserves all token contributions",
+        "Simple and fast"
+      ],
+      "disadvantages": [
+        "Sensitive to sequence length",
+        "May cause numerical overflow",
+        "Not normalized"
+      ],
+      "recommended_for": [
+        "Short sequences",
+        "When length is consistent"
+      ],
+      "not_recommended_for": [
+        "Variable length texts",
+        "Long sequences"
+      ]
+    },
+    "attention": {
+      "name": "Attention Pooling",
+      "description": "Weighted average using attention weights",
+      "mathematical_definition": "output = Σ(attention_weights * token_embeddings)",
+      "use_cases": [
+        "Question answering",
+        "When context matters",
+        "Complex reasoning tasks"
+      ],
+      "advantages": [
+        "Context-aware",
+        "Focuses on relevant parts",
+        "Interpretable"
+      ],
+      "disadvantages": [
+        "Computationally expensive",
+        "Requires attention mechanism",
+        "More complex"
+      ],
+      "recommended_for": [
+        "QA systems",
+        "When interpretability matters",
+        "Complex reasoning"
+      ],
+      "not_recommended_for": [
+        "Simple tasks",
+        "When speed is crucial"
+      ]
+    },
+    "last": {
+      "name": "Last Hidden State",
+      "description": "Uses the last hidden state from RNN/LSTM",
+      "mathematical_definition": "output = hidden_states[-1]",
+      "use_cases": [
+        "RNN/LSTM models",
+        "When sequence order matters"
+      ],
+      "advantages": [
+        "Captures sequential information",
+        "Simple implementation",
+        "Good for RNNs"
+      ],
+      "disadvantages": [
+        "May lose early context",
+        "Position-dependent",
+        "Not optimal for transformers"
+      ],
+      "recommended_for": [
+        "RNN/LSTM models",
+        "Sequential tasks",
+        "When order matters"
+      ],
+      "not_recommended_for": [
+        "Transformer models",
+        "When early context is important"
+      ]
+    }
+  },
+  "encoding_parameters": {
+    "normalize": {
+      "name": "Normalization Methods",
+      "description": "Different methods to normalize embeddings for better similarity calculations",
+      "options": {
+        "l1": {
+          "name": "L1 Normalization",
+          "description": "Normalize to sum of absolute values equals 1",
+          "mathematical_definition": "x_norm = x / ||x||₁",
+          "use_cases": ["Sparse feature vectors", "When magnitude matters"],
+          "advantages": ["Preserves sparsity", "Robust to outliers"],
+          "disadvantages": ["May not work well for dense vectors"]
+        },
+        "l2": {
+          "name": "L2 Normalization",
+          "description": "Normalize to Euclidean norm equals 1",
+          "mathematical_definition": "x_norm = x / ||x||₂",
+          "use_cases": ["Cosine similarity", "Most embedding tasks"],
+          "advantages": ["Standard for embeddings", "Works well with cosine similarity"],
+          "disadvantages": ["May not preserve relative magnitudes"]
+        },
+        "z-score": {
+          "name": "Z-Score Standardization",
+          "description": "Standardize to mean=0, std=1",
+          "mathematical_definition": "x_norm = (x - μ) / σ",
+          "use_cases": ["Statistical analysis", "When distribution matters"],
+          "advantages": ["Handles outliers well", "Standard statistical practice"],
+          "disadvantages": ["Requires computing statistics", "May not preserve semantic relationships"]
+        },
+        "min-max": {
+          "name": "Min-Max Scaling",
+          "description": "Scale to range [0, 1]",
+          "mathematical_definition": "x_norm = (x - min) / (max - min)",
+          "use_cases": ["When bounded values needed", "Feature scaling"],
+          "advantages": ["Bounded output", "Preserves zero entries"],
+          "disadvantages": ["Sensitive to outliers", "May compress values"]
+        },
+        "none": {
+          "name": "No Normalization",
+          "description": "Use raw embeddings without normalization",
+          "use_cases": ["When magnitude is important", "Custom similarity metrics"],
+          "advantages": ["Preserves original scale", "No information loss"],
+          "disadvantages": ["May not work well with cosine similarity", "Scale-dependent"]
+        }
+      }
+    },
+    "device": {
+      "name": "Computing Device",
+      "description": "Hardware device to run the encoding process on",
+      "options": {
+        "auto": {
+          "name": "Auto Selection",
+          "description": "Automatically choose the best available device",
+          "advantages": ["Convenient", "Adapts to available hardware"],
+          "disadvantages": ["May not choose optimal device"]
+        },
+        "cpu": {
+          "name": "CPU",
+          "description": "Use central processing unit",
+          "advantages": ["Always available", "Stable", "No memory constraints"],
+          "disadvantages": ["Slower for large models", "Limited parallelization"]
+        },
+        "cuda": {
+          "name": "CUDA GPU",
+          "description": "Use NVIDIA GPU with CUDA",
+          "advantages": ["Fastest for large models", "Excellent parallelization"],
+          "disadvantages": ["Requires NVIDIA GPU", "Memory constraints", "Setup complexity"]
+        },
+        "mps": {
+          "name": "Apple Silicon GPU",
+          "description": "Use Apple's Metal Performance Shaders",
+          "advantages": ["Optimized for Apple hardware", "Good performance"],
+          "disadvantages": ["Apple hardware only", "Limited model support"]
+        }
+      }
+    },
+    "batch_size": {
+      "name": "Batch Size",
+      "description": "Number of samples processed together in a single forward pass",
+      "mathematical_definition": "Memory usage ∝ batch_size × sequence_length × hidden_size",
+      "use_cases": [
+        "Processing multiple documents",
+        "Optimizing memory vs speed trade-off"
+      ],
+      "advantages": {
+        "small": ["Lower memory usage", "More stable"],
+        "large": ["Faster processing", "Better GPU utilization"]
+      },
+      "disadvantages": {
+        "small": ["Slower processing", "Poorer GPU utilization"],
+        "large": ["Higher memory usage", "May cause OOM errors"]
+      },
+      "recommended_values": {
+        "cpu": [1, 2, 4, 8],
+        "gpu_8gb": [8, 16, 32],
+        "gpu_16gb": [16, 32, 64],
+        "gpu_24gb+": [32, 64, 128, 256]
+      }
+    },
+    "fp16": {
+      "name": "Half Precision (FP16)",
+      "description": "Use 16-bit floating point precision instead of 32-bit",
+      "mathematical_definition": "Memory reduction ≈ 50%, Speed improvement ≈ 1.5-2x",
+      "use_cases": [
+        "Large models",
+        "Memory-constrained environments",
+        "Speed optimization"
+      ],
+      "advantages": [
+        "50% memory reduction",
+        "1.5-2x speed improvement",
+        "Better GPU utilization"
+      ],
+      "disadvantages": [
+        "Slight precision loss",
+        "May cause numerical instability",
+        "Not supported on all hardware"
+      ],
+      "requirements": ["Modern GPU (Volta+ for NVIDIA)", "CUDA 10.0+"]
+    },
+    "max_length": {
+      "name": "Maximum Sequence Length",
+      "description": "Maximum number of tokens allowed in a single input sequence",
+      "use_cases": [
+        "Long document processing",
+        "Memory management",
+        "Model compatibility"
+      ],
+      "advantages": [
+        "Controls memory usage",
+        "Prevents OOM errors",
+        "Ensures model compatibility"
+      ],
+      "disadvantages": [
+        "May truncate important information",
+        "Requires careful tuning"
+      ],
+      "recommended_values": {
+        "bert": 512,
+        "roberta": 512,
+        "gpt2": 1024,
+        "t5": 512,
+        "longformer": 4096
+      }
+    },
+    "truncation": {
+      "name": "Truncation Strategy",
+      "description": "How to handle sequences longer than max_length",
+      "options": {
+        "true": {
+          "name": "Enable Truncation",
+          "description": "Cut off sequences at max_length",
+          "advantages": ["Simple", "Predictable memory usage"],
+          "disadvantages": ["May lose important information"]
+        },
+        "false": {
+          "name": "Disable Truncation",
+          "description": "Error or use chunking strategy",
+          "advantages": ["Preserves all information"],
+          "disadvantages": ["May cause errors", "Requires chunking logic"]
+        }
+      }
+    },
+    "stride": {
+      "name": "Sliding Window Stride",
+      "description": "Overlap between consecutive chunks when using sliding window",
+      "mathematical_definition": "overlap = max_length - stride",
+      "use_cases": [
+        "Long document processing",
+        "Context preservation",
+        "Sliding window chunking"
+      ],
+      "advantages": [
+        "Preserves context between chunks",
+        "Reduces information loss",
+        "Better for long documents"
+      ],
+      "disadvantages": [
+        "Increases computational cost",
+        "More complex aggregation needed"
+      ],
+      "recommended_values": {
+        "small_overlap": "max_length * 0.1",
+        "medium_overlap": "max_length * 0.25",
+        "large_overlap": "max_length * 0.5"
+      }
+    },
+    "tokenizer": {
+      "name": "Tokenizer Implementation",
+      "description": "Different tokenizer implementations with varying speed/quality trade-offs",
+      "options": {
+        "default": {
+          "name": "Default Tokenizer",
+          "description": "Model's default tokenizer",
+          "advantages": ["Guaranteed compatibility", "Standard behavior"],
+          "disadvantages": ["May not be optimal for speed"]
+        },
+        "fast": {
+          "name": "Fast Tokenizer",
+          "description": "Optimized for speed",
+          "advantages": ["Faster processing", "Lower memory usage"],
+          "disadvantages": ["May have slight differences", "Not available for all models"]
+        },
+        "slow": {
+          "name": "Slow Tokenizer",
+          "description": "Pure Python implementation",
+          "advantages": ["More features", "Better error handling"],
+          "disadvantages": ["Slower", "Higher memory usage"]
+        },
+        "custom": {
+          "name": "Custom Tokenizer",
+          "description": "User-defined tokenizer",
+          "advantages": ["Full control", "Domain-specific optimization"],
+          "disadvantages": ["Requires implementation", "May break compatibility"]
+        }
+      }
+    },
+    "special_tokens": {
+      "name": "Special Tokens",
+      "description": "Whether to add model-specific special tokens (CLS, SEP, etc.)",
+      "use_cases": [
+        "BERT/RoBERTa models",
+        "Classification tasks",
+        "Sentence-level tasks"
+      ],
+      "advantages": [
+        "Model-optimized",
+        "Better for classification",
+        "Standard practice for BERT models"
+      ],
+      "disadvantages": [
+        "Increases sequence length",
+        "May not be needed for all tasks"
+      ],
+      "recommended_for": ["BERT", "RoBERTa", "Classification tasks"],
+      "not_recommended_for": ["GPT models", "Generation tasks"]
+    },
+    "return_tensors": {
+      "name": "Output Tensor Format",
+      "description": "Format of the returned embeddings",
+      "options": {
+        "pt": {
+          "name": "PyTorch Tensors",
+          "description": "Return as PyTorch tensors",
+          "advantages": ["Native PyTorch", "GPU support", "Gradient computation"],
+          "disadvantages": ["PyTorch dependency"]
+        },
+        "np": {
+          "name": "NumPy Arrays",
+          "description": "Return as NumPy arrays",
+          "advantages": ["Universal compatibility", "Easy to work with"],
+          "disadvantages": ["No GPU support", "No gradients"]
+        },
+        "tf": {
+          "name": "TensorFlow Tensors",
+          "description": "Return as TensorFlow tensors",
+          "advantages": ["Native TensorFlow", "GPU support"],
+          "disadvantages": ["TensorFlow dependency"]
+        }
+      }
+    },
+    "output_hidden_states": {
+      "name": "Hidden States Output",
+      "description": "Whether to return intermediate hidden states from all layers",
+      "use_cases": [
+        "Layer-wise analysis",
+        "Feature extraction from specific layers",
+        "Model interpretability"
+      ],
+      "advantages": [
+        "Access to all layer representations",
+        "Better for analysis",
+        "More flexibility"
+      ],
+      "disadvantages": [
+        "Higher memory usage",
+        "Slower processing",
+        "Larger output size"
+      ]
+    },
+    "aggregation": {
+      "name": "Multi-Segment Aggregation",
+      "description": "How to combine embeddings from multiple input segments",
+      "options": {
+        "none": {
+          "name": "No Aggregation",
+          "description": "Return separate embeddings for each segment",
+          "advantages": ["Preserves segment information", "Flexible"],
+          "disadvantages": ["More complex handling needed"]
+        },
+        "mean": {
+          "name": "Mean Aggregation",
+          "description": "Average embeddings across segments",
+          "advantages": ["Simple", "Balanced representation"],
+          "disadvantages": ["May lose segment-specific information"]
+        },
+        "max": {
+          "name": "Max Aggregation",
+          "description": "Element-wise maximum across segments",
+          "advantages": ["Preserves strongest features"],
+          "disadvantages": ["May ignore important segments"]
+        },
+        "sum": {
+          "name": "Sum Aggregation",
+          "description": "Sum embeddings across segments",
+          "advantages": ["Preserves all contributions"],
+          "disadvantages": ["Scale-dependent", "May overflow"]
+        },
+        "attention": {
+          "name": "Attention Aggregation",
+          "description": "Weighted combination using attention",
+          "advantages": ["Context-aware", "Interpretable"],
+          "disadvantages": ["More complex", "Computationally expensive"]
+        }
+      }
+    }
+  },
+  "decoding_parameters": {
+    "temperature": {
+      "name": "Temperature",
+      "description": "Controls randomness in token selection. Higher values make output more random/creative",
+      "mathematical_definition": "P(token) ∝ exp(logits / temperature)",
+      "use_cases": [
+        "Creative text generation",
+        "Diverse output generation",
+        "Controlling randomness"
+      ],
+      "advantages": {
+        "low": ["Deterministic", "Consistent", "Good for factual tasks"],
+        "high": ["Creative", "Diverse", "Good for artistic tasks"]
+      },
+      "disadvantages": {
+        "low": ["Repetitive", "Less creative"],
+        "high": ["Incoherent", "Less factual"]
+      },
+      "recommended_values": {
+        "factual": [0.1, 0.3],
+        "balanced": [0.7, 1.0],
+        "creative": [1.2, 1.5]
+      }
+    },
+    "top_k": {
+      "name": "Top-K Sampling",
+      "description": "Sample only from the top K most likely tokens at each step",
+      "mathematical_definition": "P(token) = 0 if token not in top K, otherwise proportional to original probability",
+      "use_cases": [
+        "Controlling vocabulary diversity",
+        "Preventing low-probability tokens",
+        "Improving output quality"
+      ],
+      "advantages": [
+        "Prevents unlikely tokens",
+        "Improves coherence",
+        "Faster than full sampling"
+      ],
+      "disadvantages": [
+        "May limit creativity",
+        "Requires tuning"
+      ],
+      "recommended_values": {
+        "conservative": [10, 20],
+        "balanced": [40, 50],
+        "diverse": [80, 100]
+      }
+    },
+    "top_p": {
+      "name": "Nucleus Sampling (Top-p)",
+      "description": "Sample from the smallest set of tokens whose cumulative probability exceeds p",
+      "mathematical_definition": "Select tokens until Σ P(token) ≥ p",
+      "use_cases": [
+        "Dynamic vocabulary selection",
+        "Balancing quality and diversity",
+        "Modern text generation"
+      ],
+      "advantages": [
+        "Adaptive vocabulary size",
+        "Better than top-k in practice",
+        "More natural sampling"
+      ],
+      "disadvantages": [
+        "More complex to understand",
+        "Requires careful tuning"
+      ],
+      "recommended_values": {
+        "focused": [0.8, 0.9],
+        "balanced": [0.9, 0.95],
+        "diverse": [0.95, 0.99]
+      }
+    },
+    "repetition_penalty": {
+      "name": "Repetition Penalty",
+      "description": "Penalize tokens that have already been generated to reduce repetition",
+      "mathematical_definition": "logits[token] = logits[token] - penalty * count(token)",
+      "use_cases": [
+        "Preventing repetitive output",
+        "Improving text quality",
+        "Long-form generation"
+      ],
+      "advantages": [
+        "Reduces repetition",
+        "Improves readability",
+        "Better for long texts"
+      ],
+      "disadvantages": [
+        "May prevent legitimate repetition",
+        "Requires careful tuning"
+      ],
+      "recommended_values": {
+        "light": [1.0, 1.1],
+        "moderate": [1.1, 1.2],
+        "strong": [1.2, 1.3]
+      }
+    },
+    "length_penalty": {
+      "name": "Length Penalty",
+      "description": "Control whether the model prefers shorter or longer outputs",
+      "mathematical_definition": "score = log_prob / (length ^ penalty)",
+      "use_cases": [
+        "Controlling output length",
+        "Beam search optimization",
+        "Task-specific length preferences"
+      ],
+      "advantages": [
+        "Controls output length",
+        "Improves beam search",
+        "Task-specific optimization"
+      ],
+      "disadvantages": [
+        "May affect quality",
+        "Requires tuning"
+      ],
+      "recommended_values": {
+        "prefer_short": [0.8, 1.0],
+        "neutral": [1.0],
+        "prefer_long": [1.0, 1.2]
+      }
+    },
+    "no_repeat_ngram_size": {
+      "name": "N-Gram Repetition Prevention",
+      "description": "Prevent the model from repeating n-grams of specified size",
+      "use_cases": [
+        "Preventing phrase repetition",
+        "Improving text quality",
+        "Long-form generation"
+      ],
+      "advantages": [
+        "Prevents phrase repetition",
+        "Improves readability",
+        "Simple to implement"
+      ],
+      "disadvantages": [
+        "May prevent legitimate repetition",
+        "Can be too restrictive"
+      ],
+      "recommended_values": {
+        "light": [2, 3],
+        "moderate": [3, 4],
+        "strong": [4, 5]
+      }
+    },
+    "max_length": {
+      "name": "Maximum Output Length",
+      "description": "Maximum number of tokens to generate",
+      "use_cases": [
+        "Controlling generation time",
+        "Memory management",
+        "Task-specific constraints"
+      ],
+      "advantages": [
+        "Controls generation time",
+        "Prevents infinite loops",
+        "Memory efficient"
+      ],
+      "disadvantages": [
+        "May truncate output",
+        "Requires careful setting"
+      ],
+      "recommended_values": {
+        "short": [50, 100],
+        "medium": [200, 500],
+        "long": [1000, 2000]
+      }
+    },
+    "min_length": {
+      "name": "Minimum Output Length",
+      "description": "Minimum number of tokens to generate before allowing EOS",
+      "use_cases": [
+        "Ensuring sufficient output",
+        "Preventing premature stopping",
+        "Task-specific requirements"
+      ],
+      "advantages": [
+        "Ensures minimum output",
+        "Prevents premature stopping",
+        "Better for structured tasks"
+      ],
+      "disadvantages": [
+        "May force continuation",
+        "Could affect quality"
+      ],
+      "recommended_values": {
+        "short": [10, 20],
+        "medium": [50, 100],
+        "long": [200, 500]
+      }
+    },
+    "num_beams": {
+      "name": "Beam Search Width",
+      "description": "Number of parallel search paths in beam search",
+      "use_cases": [
+        "Improving output quality",
+        "Finding optimal sequences",
+        "Structured generation"
+      ],
+      "advantages": [
+        "Better output quality",
+        "More systematic search",
+        "Good for factual tasks"
+      ],
+      "disadvantages": [
+        "Slower generation",
+        "Higher memory usage",
+        "May be less creative"
+      ],
+      "recommended_values": {
+        "fast": [1, 2],
+        "balanced": [4, 8],
+        "quality": [10, 20]
+      }
+    },
+    "early_stopping": {
+      "name": "Early Stopping",
+      "description": "Stop generation when all beams reach EOS token",
+      "use_cases": [
+        "Efficient beam search",
+        "Preventing unnecessary computation",
+        "Multi-beam generation"
+      ],
+      "advantages": [
+        "Faster generation",
+        "Efficient resource usage",
+        "Natural stopping"
+      ],
+      "disadvantages": [
+        "May stop too early",
+        "Less control over length"
+      ]
+    },
+    "do_sample": {
+      "name": "Sampling Mode",
+      "description": "Use random sampling instead of greedy/beam search",
+      "use_cases": [
+        "Creative generation",
+        "Diverse outputs",
+        "Non-deterministic generation"
+      ],
+      "advantages": [
+        "More creative output",
+        "Diverse generations",
+        "Less repetitive"
+      ],
+      "disadvantages": [
+        "Less predictable",
+        "May be less coherent",
+        "Harder to control"
+      ]
+    },
+    "typical_p": {
+      "name": "Typical Sampling",
+      "description": "Alternative to nucleus sampling that considers typicality",
+      "mathematical_definition": "Select tokens based on typicality rather than just probability",
+      "use_cases": [
+        "Alternative to nucleus sampling",
+        "When top-p doesn't work well",
+        "Experimental generation"
+      ],
+      "advantages": [
+        "Different from nucleus sampling",
+        "May work better in some cases",
+        "More recent approach"
+      ],
+      "disadvantages": [
+        "Less well-understood",
+        "May not work for all models"
+      ]
+    },
+    "penalty_alpha": {
+      "name": "Contrastive Search Penalty",
+      "description": "Penalty parameter for contrastive decoding",
+      "use_cases": [
+        "Contrastive decoding",
+        "Improving generation quality",
+        "Reducing repetition"
+      ],
+      "advantages": [
+        "May improve quality",
+        "Reduces repetition",
+        "Novel approach"
+      ],
+      "disadvantages": [
+        "Experimental",
+        "May not work for all models",
+        "Requires tuning"
+      ]
+    },
+    "top_a": {
+      "name": "Top-A Sampling",
+      "description": "Alternative top-a sampling method",
+      "use_cases": [
+        "Alternative sampling method",
+        "When other methods don't work",
+        "Experimental generation"
+      ],
+      "advantages": [
+        "Different approach",
+        "May work better in some cases"
+      ],
+      "disadvantages": [
+        "Less common",
+        "May not be well-supported"
+      ]
+    },
+    "temperature_decay": {
+      "name": "Temperature Decay",
+      "description": "Gradually reduce temperature during generation",
+      "use_cases": [
+        "Controlling generation dynamics",
+        "Balancing creativity and coherence",
+        "Long-form generation"
+      ],
+      "advantages": [
+        "Dynamic control",
+        "May improve long texts",
+        "Balances creativity and coherence"
+      ],
+      "disadvantages": [
+        "More complex",
+        "Requires tuning",
+        "May not work for all models"
+      ]
+    },
+    "prefix_allowed_tokens": {
+      "name": "Allowed Prefix Tokens",
+      "description": "Restrict which tokens can appear at the beginning of generation",
+      "use_cases": [
+        "Controlled generation",
+        "Task-specific constraints",
+        "Format enforcement"
+      ],
+      "advantages": [
+        "Enforces constraints",
+        "Better control",
+        "Task-specific generation"
+      ],
+      "disadvantages": [
+        "May limit creativity",
+        "Requires careful specification"
+      ]
+    }
+  },
+  "preprocessing_parameters": {
+    "splitter_type": {
+      "name": "Text Splitter Type",
+      "description": "Different strategies for splitting long documents into chunks",
+      "options": {
+        "recursive": {
+          "name": "Recursive Character Splitter",
+          "description": "Recursively split on different separators (paragraphs, sentences, etc.)",
+          "advantages": ["Adapts to document structure", "Preserves semantic units", "Handles various formats"],
+          "disadvantages": ["More complex", "May be slower"],
+          "recommended_for": ["Mixed format documents", "When structure matters"]
+        },
+        "character": {
+          "name": "Character Splitter",
+          "description": "Split by character count",
+          "advantages": ["Simple", "Fast", "Predictable"],
+          "disadvantages": ["May break words/sentences", "No semantic awareness"],
+          "recommended_for": ["Simple documents", "When speed matters"]
+        },
+        "token": {
+          "name": "Token Splitter",
+          "description": "Split by token count",
+          "advantages": ["Model-aware", "Consistent with tokenization", "Better for LLMs"],
+          "disadvantages": ["Requires tokenizer", "May be slower"],
+          "recommended_for": ["LLM applications", "When token count matters"]
+        },
+        "sentence": {
+          "name": "Sentence Splitter",
+          "description": "Split by sentence boundaries",
+          "advantages": ["Natural language units", "Preserves meaning", "Good for NLP"],
+          "disadvantages": ["May create uneven chunks", "Language-dependent"],
+          "recommended_for": ["Natural language documents", "NLP tasks"]
+        },
+        "paragraph": {
+          "name": "Paragraph Splitter",
+          "description": "Split by paragraph boundaries",
+          "advantages": ["Logical units", "Preserves structure", "Good for documents"],
+          "disadvantages": ["May create very long/short chunks", "Format-dependent"],
+          "recommended_for": ["Structured documents", "When paragraphs matter"]
+        },
+        "custom": {
+          "name": "Custom Splitter",
+          "description": "User-defined splitting logic",
+          "advantages": ["Full control", "Domain-specific", "Flexible"],
+          "disadvantages": ["Requires implementation", "May be complex"],
+          "recommended_for": ["Specialized domains", "When standard splitters don't work"]
+        }
+      }
+    },
+    "chunk_size": {
+      "name": "Chunk Size",
+      "description": "Target size for each text chunk (in characters or tokens)",
+      "use_cases": [
+        "Memory management",
+        "Model input constraints",
+        "Processing efficiency"
+      ],
+      "advantages": {
+        "small": ["Lower memory usage", "Faster processing", "Better for small models"],
+        "large": ["More context", "Better semantic understanding", "Fewer chunks"]
+      },
+      "disadvantages": {
+        "small": ["Less context", "May fragment meaning", "More chunks to process"],
+        "large": ["Higher memory usage", "May exceed model limits", "Slower processing"]
+      },
+      "recommended_values": {
+        "character_based": {
+          "small": [500, 1000],
+          "medium": [1000, 2000],
+          "large": [2000, 4000]
+        },
+        "token_based": {
+          "small": [256, 512],
+          "medium": [512, 1024],
+          "large": [1024, 2048]
+        }
+      }
+    },
+    "chunk_overlap": {
+      "name": "Chunk Overlap",
+      "description": "Number of characters/tokens to overlap between consecutive chunks",
+      "use_cases": [
+        "Preserving context",
+        "Reducing information loss",
+        "Improving retrieval"
+      ],
+      "advantages": [
+        "Preserves context between chunks",
+        "Reduces information loss at boundaries",
+        "Better for semantic search"
+      ],
+      "disadvantages": [
+        "Increases total processing",
+        "More storage required",
+        "Potential redundancy"
+      ],
+      "recommended_values": {
+        "small_overlap": "chunk_size * 0.1",
+        "medium_overlap": "chunk_size * 0.2",
+        "large_overlap": "chunk_size * 0.3"
+      }
+    },
+    "remove_empty": {
+      "name": "Remove Empty Chunks",
+      "description": "Filter out chunks that are empty or contain only whitespace",
+      "use_cases": [
+        "Data cleaning",
+        "Storage optimization",
+        "Quality improvement"
+      ],
+      "advantages": [
+        "Cleaner data",
+        "Reduces storage",
+        "Improves processing efficiency"
+      ],
+      "disadvantages": [
+        "May remove legitimate content",
+        "Requires careful threshold setting"
+      ]
+    },
+    "min_chunk_length": {
+      "name": "Minimum Chunk Length",
+      "description": "Minimum length required for a chunk to be retained",
+      "use_cases": [
+        "Quality filtering",
+        "Removing noise",
+        "Ensuring meaningful chunks"
+      ],
+      "advantages": [
+        "Filters out noise",
+        "Ensures meaningful chunks",
+        "Improves quality"
+      ],
+      "disadvantages": [
+        "May remove legitimate short content",
+        "Requires careful threshold setting"
+      ],
+      "recommended_values": {
+        "character_based": [50, 100],
+        "token_based": [10, 20]
+      }
+    },
+    "merge_small_chunks": {
+      "name": "Merge Small Chunks",
+      "description": "Combine small chunks with neighboring ones",
+      "use_cases": [
+        "Optimizing chunk sizes",
+        "Reducing fragmentation",
+        "Improving efficiency"
+      ],
+      "advantages": [
+        "Reduces fragmentation",
+        "More efficient processing",
+        "Better chunk distribution"
+      ],
+      "disadvantages": [
+        "May create uneven chunks",
+        "More complex logic"
+      ]
+    },
+    "preserve_structure": {
+      "name": "Preserve Structure",
+      "description": "Maintain document structure (paragraphs, sections) during splitting",
+      "use_cases": [
+        "Structured documents",
+        "When format matters",
+        "Academic papers"
+      ],
+      "advantages": [
+        "Maintains document logic",
+        "Better for structured tasks",
+        "Preserves formatting"
+      ],
+      "disadvantages": [
+        "May create uneven chunks",
+        "More complex processing"
+      ]
+    },
+    "enhance_retrieval": {
+      "name": "Enhance for Retrieval",
+      "description": "Optimize chunks specifically for search and retrieval tasks",
+      "use_cases": [
+        "Search engines",
+        "Question answering",
+        "Information retrieval"
+      ],
+      "advantages": [
+        "Better for retrieval",
+        "Optimized for search",
+        "Improved relevance"
+      ],
+      "disadvantages": [
+        "May not work for other tasks",
+        "More complex processing"
+      ]
+    },
+    "clean_text": {
+      "name": "Text Cleaning",
+      "description": "Apply basic text cleaning (lowercase, normalize whitespace, etc.)",
+      "use_cases": [
+        "Standardization",
+        "Noise reduction",
+        "Consistency improvement"
+      ],
+      "advantages": [
+        "Standardizes text",
+        "Reduces noise",
+        "Improves consistency"
+      ],
+      "disadvantages": [
+        "May lose important information",
+        "Not suitable for all tasks"
+      ],
+      "operations": [
+        "Convert to lowercase",
+        "Normalize whitespace",
+        "Standardize punctuation",
+        "Remove extra spaces"
+      ]
+    },
+    "remove_special_chars": {
+      "name": "Remove Special Characters",
+      "description": "Remove symbols and special characters from text",
+      "use_cases": [
+        "Noise reduction",
+        "Focus on text content",
+        "Standardization"
+      ],
+      "advantages": [
+        "Reduces noise",
+        "Focuses on text content",
+        "Standardizes format"
+      ],
+      "disadvantages": [
+        "May remove important symbols",
+        "Not suitable for technical documents"
+      ],
+      "what_gets_removed": [
+        "Symbols (@, #, $, etc.)",
+        "Special punctuation",
+        "Non-ASCII characters",
+        "Control characters"
+      ]
+    },
+    "extract_key_sentences": {
+      "name": "Key Sentence Extraction",
+      "description": "Identify and extract the most important sentences from each chunk",
+      "use_cases": [
+        "Summarization",
+        "Key information extraction",
+        "Content analysis"
+      ],
+      "advantages": [
+        "Focuses on important content",
+        "Reduces redundancy",
+        "Better for summarization"
+      ],
+      "disadvantages": [
+        "May miss important details",
+        "More complex processing",
+        "Requires good extraction algorithm"
+      ]
+    },
+    "language": {
+      "name": "Document Language",
+      "description": "Language of the document for language-specific preprocessing",
+      "options": {
+        "en": {
+          "name": "English",
+          "description": "English language processing",
+          "advantages": ["Best support", "Most tools available", "Well-tested"]
+        },
+        "de": {
+          "name": "German",
+          "description": "German language processing",
+          "advantages": ["Good support", "Compound word handling"]
+        },
+        "fr": {
+          "name": "French",
+          "description": "French language processing",
+          "advantages": ["Good support", "Accent handling"]
+        },
+        "es": {
+          "name": "Spanish",
+          "description": "Spanish language processing",
+          "advantages": ["Good support", "Accent handling"]
+        },
+        "it": {
+          "name": "Italian",
+          "description": "Italian language processing",
+          "advantages": ["Good support", "Accent handling"]
+        },
+        "other": {
+          "name": "Other Languages",
+          "description": "Other language processing",
+          "advantages": ["Flexible"],
+          "disadvantages": ["Limited tool support", "May not work optimally"]
+        }
+      }
+    },
+    "sentence_splitter": {
+      "name": "Sentence Splitter Implementation",
+      "description": "Library/tool to use for sentence boundary detection",
+      "options": {
+        "default": {
+          "name": "Default Splitter",
+          "description": "Model's default sentence splitter",
+          "advantages": ["Guaranteed compatibility", "No additional dependencies"],
+          "disadvantages": ["May not be optimal"]
+        },
+        "spacy": {
+          "name": "spaCy",
+          "description": "Use spaCy for sentence splitting",
+          "advantages": ["High quality", "Language-specific", "Fast"],
+          "disadvantages": ["Requires spaCy installation", "Model dependency"]
+        },
+        "nltk": {
+          "name": "NLTK",
+          "description": "Use NLTK for sentence splitting",
+          "advantages": ["Good quality", "Lightweight", "Well-established"],
+          "disadvantages": ["May be slower", "Requires NLTK installation"]
+        },
+        "custom": {
+          "name": "Custom Splitter",
+          "description": "User-defined sentence splitter",
+          "advantages": ["Full control", "Domain-specific"],
+          "disadvantages": ["Requires implementation", "May be complex"]
+        }
+      }
+    }
+  }
+}

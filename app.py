@@ -7,7 +7,7 @@ from core.task_config import (
     get_available_tasks, get_task_param_blocks, get_task_parameters,
     get_task_description, get_task_icon
 )
-from utils.ui_utils import aggrid_model_picker, smart_param_table_with_reset
+from utils.ui_utils import aggrid_model_picker, smart_param_table_with_reset, display_parameter_documentation
 
 # --- Load models from JSON
 config_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "config")
@@ -23,48 +23,66 @@ models_df = pd.DataFrame(all_models)
 st.set_page_config(page_title="🧠 GenAI Playground", layout="wide")
 st.title("🧠 GenAI Playground")
 
-tasks = get_available_tasks()
-task = st.sidebar.selectbox("Choose Task", tasks)
-st.markdown(f"### {get_task_icon(task)} {task}")
-st.write(get_task_description(task))
+# --- Sidebar with task selection and documentation ---
+with st.sidebar:
+    st.markdown("## 🎯 Task Selection")
+    tasks = get_available_tasks()
+    task = st.selectbox("Choose Task", tasks)
+    
+    st.markdown("---")
+    st.markdown("## 📚 Documentation")
+    if st.button("📖 Parameter Documentation", help="View comprehensive parameter documentation"):
+        st.session_state.show_docs = True
+    
+    if st.button("🔙 Back to Main", help="Return to main interface"):
+        st.session_state.show_docs = False
 
-# --- Model selection widgets based on task ---
-encoder_models = [m for m in models_json.get('ENCODER_ONLY_MODELS', [])]
-decoder_models = [m for m in models_json.get('DECODER_ONLY_MODELS', [])]
-encoder_decoder_models = [m for m in models_json.get('ENCODER_DECODER_MODELS', [])]
+# --- Main content area ---
+if st.session_state.get('show_docs', False):
+    # Display parameter documentation
+    display_parameter_documentation()
+else:
+    # Display main interface
+    st.markdown(f"### {get_task_icon(task)} {task}")
+    st.write(get_task_description(task))
 
-selected_encoder = selected_decoder = selected_encoder_decoder = None
+    # --- Model selection widgets based on task ---
+    encoder_models = [m for m in models_json.get('ENCODER_ONLY_MODELS', [])]
+    decoder_models = [m for m in models_json.get('DECODER_ONLY_MODELS', [])]
+    encoder_decoder_models = [m for m in models_json.get('ENCODER_DECODER_MODELS', [])]
 
-if task == "RAG-based QA":
-    st.subheader("Select an Encoder Model")
-    encoder_df = pd.DataFrame(encoder_models)
-    selected_encoder = aggrid_model_picker(encoder_df, key="aggrid_encoder_model_picker")
-    if selected_encoder:
-        st.success(f"Selected encoder: {selected_encoder['name']}")
-        st.write(selected_encoder)
+    selected_encoder = selected_decoder = selected_encoder_decoder = None
 
-    st.subheader("Select a Decoder Model")
-    decoder_df = pd.DataFrame(decoder_models)
-    selected_decoder = aggrid_model_picker(decoder_df, key="aggrid_decoder_model_picker")
-    if selected_decoder:
-        st.success(f"Selected decoder: {selected_decoder['name']}")
-        st.write(selected_decoder)
+    if task == "RAG-based QA":
+        st.subheader("Select an Encoder Model")
+        encoder_df = pd.DataFrame(encoder_models)
+        selected_encoder = aggrid_model_picker(encoder_df, key="aggrid_encoder_model_picker")
+        if selected_encoder:
+            st.success(f"Selected encoder: {selected_encoder['name']}")
+            st.write(selected_encoder)
 
-elif task in ("Normal QA", "Summarisation"):
-    st.subheader("Select an Encoder-Decoder Model")
-    encoder_decoder_df = pd.DataFrame(encoder_decoder_models)
-    selected_encoder_decoder = aggrid_model_picker(encoder_decoder_df, key="aggrid_encoder_decoder_model_picker")
-    if selected_encoder_decoder:
-        st.success(f"Selected encoder-decoder: {selected_encoder_decoder['name']}")
-        st.write(selected_encoder_decoder)
+        st.subheader("Select a Decoder Model")
+        decoder_df = pd.DataFrame(decoder_models)
+        selected_decoder = aggrid_model_picker(decoder_df, key="aggrid_decoder_model_picker")
+        if selected_decoder:
+            st.success(f"Selected decoder: {selected_decoder['name']}")
+            st.write(selected_decoder)
 
-# --- Editable parameter tables with AgGrid
-for block in get_task_param_blocks(task):
-    param_type = f"{block}_parameters"
-    params = get_task_parameters(task, param_type)
-    if params:
-        st.subheader(block.capitalize())
-        # param_values = smart_param_table(params, key=f"param_{block}")
-        param_values = smart_param_table_with_reset(params, title=block.capitalize())
+    elif task in ("Normal QA", "Summarisation"):
+        st.subheader("Select an Encoder-Decoder Model")
+        encoder_decoder_df = pd.DataFrame(encoder_decoder_models)
+        selected_encoder_decoder = aggrid_model_picker(encoder_decoder_df, key="aggrid_encoder_decoder_model_picker")
+        if selected_encoder_decoder:
+            st.success(f"Selected encoder-decoder: {selected_encoder_decoder['name']}")
+            st.write(selected_encoder_decoder)
 
-        st.write(f"Values for {block}:", param_values)
+    # --- Editable parameter tables with AgGrid
+    for block in get_task_param_blocks(task):
+        param_type = f"{block}_parameters"
+        params = get_task_parameters(task, param_type)
+        if params:
+            st.subheader(block.capitalize())
+            # param_values = smart_param_table(params, key=f"param_{block}")
+            param_values = smart_param_table_with_reset(params, title=block.capitalize())
+
+            st.write(f"Values for {block}:", param_values)
