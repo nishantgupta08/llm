@@ -808,7 +808,7 @@ def display_parameter_doc_sidebar(param_doc):
 
 def create_preprocessing_table(params, task):
     """
-    Create a special expandable table for preprocessing parameters with dropdowns for details and sliders/dropdowns for values
+    Create a special expandable table for preprocessing parameters with expandable parameter names for details and sliders/dropdowns for values
     """
     st.subheader("📝 Preprocessing Parameters")
     
@@ -824,7 +824,7 @@ def create_preprocessing_table(params, task):
             doc_data = {}
         
         # Create columns for the table layout
-        col1, col2, col3, col4 = st.columns([2, 3, 2, 2])
+        col1, col2, col3 = st.columns([2, 3, 2])
         
         # Header
         with col1:
@@ -833,8 +833,6 @@ def create_preprocessing_table(params, task):
             st.markdown("**Description**")
         with col3:
             st.markdown("**Value**")
-        with col4:
-            st.markdown("**Details**")
         
         st.markdown("---")
         
@@ -844,15 +842,14 @@ def create_preprocessing_table(params, task):
             # Get documentation for this parameter
             param_doc = doc_data.get("preprocessing_parameters", {}).get(name, {})
             
-            # Parameter name with help tooltip
+            # Parameter name as expandable
             with col1:
                 if param_doc:
-                    help_text = f"**{param_doc.get('name', name)}**\n\n{param_doc.get('description', '')}"
-                    if param_doc.get('use_cases'):
-                        help_text += f"\n\n**Use Cases:**\n" + "\n".join([f"• {uc}" for uc in param_doc['use_cases'][:2]])
-                    st.markdown(f"{cfg.get('label', name)} ⓘ", help=help_text)
+                    # Create expandable parameter name
+                    with st.expander(f"**{cfg.get('label', name)}** ⓘ", expanded=False):
+                        display_parameter_doc_sidebar(param_doc)
                 else:
-                    st.markdown(cfg.get("label", name))
+                    st.markdown(f"**{cfg.get('label', name)}**")
             
             # Description
             with col2:
@@ -927,17 +924,6 @@ def create_preprocessing_table(params, task):
                     )
                 
                 param_values[name] = value
-            
-            # Details button
-            with col4:
-                if param_doc:
-                    if st.button("📖 Details", key=f"details_{name}"):
-                        st.session_state[f"show_details_{name}"] = not st.session_state.get(f"show_details_{name}", False)
-                
-                # Show details in an expander below the table
-                if st.session_state.get(f"show_details_{name}", False):
-                    with st.expander(f"Detailed Documentation for {cfg.get('label', name)}", expanded=True):
-                        display_parameter_doc_sidebar(param_doc)
         
         st.markdown("---")
         st.markdown(f"**Current Preprocessing Configuration:**")
