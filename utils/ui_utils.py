@@ -805,3 +805,233 @@ def display_parameter_doc_sidebar(param_doc):
         st.markdown("**Operations:**")
         for operation in param_doc['operations']:
             st.markdown(f"🔧 {operation}")
+
+def create_preprocessing_table(params, task):
+    """
+    Create a special expandable table for preprocessing parameters with dropdowns for details and sliders/dropdowns for values
+    """
+    st.subheader("📝 Preprocessing Parameters")
+    
+    with st.expander("Configure Preprocessing Parameters", expanded=True):
+        # Load parameter documentation for tooltips
+        config_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "config")
+        doc_path = os.path.join(config_dir, "parameter_documentation.json")
+        
+        try:
+            with open(doc_path, 'r', encoding='utf-8') as f:
+                doc_data = json.load(f)
+        except:
+            doc_data = {}
+        
+        # Create columns for the table layout
+        col1, col2, col3, col4 = st.columns([2, 3, 2, 2])
+        
+        # Header
+        with col1:
+            st.markdown("**Parameter**")
+        with col2:
+            st.markdown("**Description**")
+        with col3:
+            st.markdown("**Value**")
+        with col4:
+            st.markdown("**Details**")
+        
+        st.markdown("---")
+        
+        param_values = {}
+        
+        for name, cfg in params.items():
+            # Get documentation for this parameter
+            param_doc = doc_data.get("preprocessing_parameters", {}).get(name, {})
+            
+            # Parameter name with help tooltip
+            with col1:
+                if param_doc:
+                    help_text = f"**{param_doc.get('name', name)}**\n\n{param_doc.get('description', '')}"
+                    if param_doc.get('use_cases'):
+                        help_text += f"\n\n**Use Cases:**\n" + "\n".join([f"• {uc}" for uc in param_doc['use_cases'][:2]])
+                    st.markdown(f"{cfg.get('label', name)} ⓘ", help=help_text)
+                else:
+                    st.markdown(cfg.get("label", name))
+            
+            # Description
+            with col2:
+                st.markdown(cfg.get("info", ""))
+            
+            # Value input
+            with col3:
+                val_key = f"preprocessing_{name}_val"
+                ideal = cfg.get("ideal", "")
+                typ = cfg.get("type", "text")
+                
+                # Initialize session state if not exists
+                if val_key not in st.session_state:
+                    if typ in ["number", "slider"]:
+                        st.session_state[val_key] = int(ideal) if str(ideal).isdigit() else 0
+                    elif typ == "checkbox":
+                        st.session_state[val_key] = bool(ideal)
+                    else:
+                        st.session_state[val_key] = ideal
+                
+                # Create appropriate widget
+                if typ in ("dropdown", "select") and cfg.get("options"):
+                    options = cfg["options"]
+                    val = st.session_state[val_key]
+                    idx = options.index(val) if val in options else 0
+                    value = st.selectbox(
+                        "", options, index=idx, key=val_key, label_visibility="collapsed"
+                    )
+                elif typ == "slider":
+                    minv = int(cfg.get("min_value", 0))
+                    maxv = int(cfg.get("max_value", 100))
+                    step = max(1, int(cfg.get("step", 1)))
+                    try:
+                        val = int(st.session_state[val_key])
+                    except Exception:
+                        val = minv
+                    
+                    if val < minv:
+                        val = minv
+                    elif val > maxv:
+                        val = maxv
+                    
+                    value = st.slider(
+                        "", min_value=minv, max_value=maxv, value=val, step=step, 
+                        key=val_key, label_visibility="collapsed"
+                    )
+                elif typ == "checkbox":
+                    value = st.checkbox(
+                        "", value=bool(st.session_state[val_key]), key=val_key, label_visibility="collapsed"
+                    )
+                elif typ == "number":
+                    minv = int(cfg.get("min_value", 0))
+                    maxv = int(cfg.get("max_value", 100))
+                    step = max(1, int(cfg.get("step", 1)))
+                    try:
+                        val = int(st.session_state[val_key])
+                    except Exception:
+                        val = minv
+                    
+                    if val < minv:
+                        val = minv
+                    elif val > maxv:
+                        val = maxv
+                    
+                    value = st.number_input(
+                        "", min_value=minv, max_value=maxv, value=val, step=step, 
+                        key=val_key, label_visibility="collapsed"
+                    )
+                else:
+                    value = st.text_input(
+                        "", value=str(st.session_state[val_key]), key=val_key, label_visibility="collapsed"
+                    )
+                
+                param_values[name] = value
+            
+            # Details button
+            with col4:
+                if param_doc:
+                    if st.button("📖 Details", key=f"details_{name}"):
+                        st.session_state[f"show_details_{name}"] = not st.session_state.get(f"show_details_{name}", False)
+                
+                # Show details in an expander below the table
+                if st.session_state.get(f"show_details_{name}", False):
+                    with st.expander(f"Detailed Documentation for {cfg.get('label', name)}", expanded=True):
+                        display_parameter_doc_sidebar(param_doc)
+        
+        st.markdown("---")
+        st.markdown(f"**Current Preprocessing Configuration:**")
+        st.json(param_values)
+        
+        return param_values
+
+def display_parameter_help_below(task):
+    """
+    Display parameter documentation below the main interface
+    """
+    # Load parameter documentation
+    config_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "config")
+    doc_path = os.path.join(config_dir, "parameter_documentation.json")
+    
+    try:
+        with open(doc_path, 'r', encoding='utf-8') as f:
+            doc_data = json.load(f)
+    except:
+        st.error("Could not load parameter documentation")
+        return
+
+    st.markdown("## 📚 Parameter Documentation")
+    st.markdown("Comprehensive guide to all available parameters and their configurations.")
+    
+    # Get task parameter blocks
+    from core.task_config import get_task_param_blocks, get_task_parameters
+    param_blocks = get_task_param_blocks(task)
+    
+    # Create tabs for different parameter categories
+    if param_blocks:
+        tab_names = [block.capitalize() for block in param_blocks]
+        tabs = st.tabs(tab_names)
+        
+        for i, block in enumerate(param_blocks):
+            with tabs[i]:
+                display_parameter_block_help_below(block, task, doc_data)
+
+def display_parameter_block_help_below(block, task, doc_data):
+    """
+    Display help for a specific parameter block in the documentation section
+    """
+    from core.task_config import get_task_parameters
+    
+    param_type = f"{block}_parameters"
+    params = get_task_parameters(task, param_type)
+    
+    if not params:
+        st.info("No parameters available for this section.")
+        return
+    
+    # Create a selectbox for parameter selection
+    param_names = list(params.keys())
+    param_labels = [params[name].get('label', name) for name in param_names]
+    
+    selected_param_label = st.selectbox(
+        "Choose a parameter to view detailed documentation:",
+        param_labels,
+        key=f"doc_param_selector_{block}"
+    )
+    
+    # Find the selected parameter
+    selected_param_name = param_names[param_labels.index(selected_param_label)]
+    param_config = params[selected_param_name]
+    
+    # Get documentation for this parameter
+    param_doc = get_parameter_documentation(selected_param_name, block, doc_data)
+    
+    # Display parameter information
+    st.markdown(f"### {param_config.get('label', selected_param_name)}")
+    st.markdown(f"**Type:** {param_config.get('type', 'text')}")
+    
+    if param_config.get('info'):
+        st.markdown(f"**Description:** {param_config.get('info')}")
+    
+    # Display documentation if available
+    if param_doc:
+        display_parameter_doc_sidebar(param_doc)
+    else:
+        st.info("No detailed documentation available for this parameter.")
+    
+    # Show current value and recommendations
+    st.markdown("---")
+    st.markdown("### Current Configuration")
+    
+    # Show ideal value and reason
+    ideal_value = param_config.get('ideal', 'Not specified')
+    ideal_reason = param_config.get('ideal_value_reason', 'No reason provided')
+    
+    st.markdown(f"**Ideal Value:** `{ideal_value}`")
+    st.markdown(f"**Reason:** {ideal_reason}")
+    
+    # Show options if available
+    if param_config.get('options'):
+        st.markdown("**Available Options:**")
+        for option in param_config['options']:
+            st.markdown(f"• `{option}`")
