@@ -54,7 +54,7 @@ def smart_param_table_with_reset(param_dict, title="Parameters"):
     doc_path = os.path.join(config_dir, "parameter_documentation.json")
     
     try:
-        with open(doc_path, 'r') as f:
+        with open(doc_path, 'r', encoding='utf-8') as f:
             doc_data = json.load(f)
     except:
         doc_data = {}
@@ -165,7 +165,8 @@ def smart_param_table_with_reset(param_dict, title="Parameters"):
                 elif val > maxv:
                     val = maxv
                 value = c_val.number_input(
-                    "Enter a value", min_value=minv, max_value=maxv, value=val, step=step, label_visibility="collapsed"
+                    "Enter a value", min_value=minv, max_value=maxv, value=val, step=step, 
+                    key=val_key, label_visibility="collapsed"
                 )
             else:
                 value = c_val.text_input(
@@ -328,13 +329,16 @@ def display_parameter_documentation():
     doc_path = os.path.join(config_dir, "parameter_documentation.json")
     
     try:
-        with open(doc_path, 'r') as f:
+        with open(doc_path, 'r', encoding='utf-8') as f:
             doc_data = json.load(f)
     except FileNotFoundError:
         st.error("Parameter documentation file not found!")
         return
     except json.JSONDecodeError:
         st.error("Invalid JSON in parameter documentation file!")
+        return
+    except UnicodeDecodeError:
+        st.error("Unicode decode error in parameter documentation file!")
         return
 
     st.markdown("## 📚 Parameter Documentation")
@@ -603,7 +607,7 @@ def display_parameter_help_tooltip(param_name, param_type="encoding"):
     doc_path = os.path.join(config_dir, "parameter_documentation.json")
     
     try:
-        with open(doc_path, 'r') as f:
+        with open(doc_path, 'r', encoding='utf-8') as f:
             doc_data = json.load(f)
     except:
         return ""
