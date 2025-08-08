@@ -918,130 +918,203 @@ def display_parameter_doc_sidebar(param_doc):
         for operation in param_doc['operations']:
             st.markdown(f"🔧 {operation}")
 
-def create_preprocessing_table(params, task):
+def create_aggrid_parameter_table(params, task, title="Parameters"):
     """
-    Create a special expandable table for preprocessing parameters with expandable parameter names for details and sliders/dropdowns for values
+    Create a collapsible AgGrid table for parameters with interactive widgets for value selection
     """
-    st.subheader("📝 Preprocessing Parameters")
+    st.subheader(f"📋 {title}")
     
-    with st.expander("Configure Preprocessing Parameters", expanded=True):
-        # Load parameter documentation for tooltips
-        config_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "config")
-        doc_path = os.path.join(config_dir, "parameter_documentation.json")
-        
-        try:
-            with open(doc_path, 'r', encoding='utf-8') as f:
-                doc_data = json.load(f)
-        except:
-            doc_data = {}
-        
-        # Create columns for the table layout
-        col1, col2, col3 = st.columns([2, 3, 2])
-        
-        # Header
-        with col1:
-            st.markdown("**Parameter**")
-        with col2:
-            st.markdown("**Description**")
-        with col3:
-            st.markdown("**Value**")
-        
-        st.markdown("---")
-        
-        param_values = {}
-        
+    # Load parameter documentation for tooltips
+    config_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "config")
+    doc_path = os.path.join(config_dir, "parameter_documentation.json")
+    
+    try:
+        with open(doc_path, 'r', encoding='utf-8') as f:
+            doc_data = json.load(f)
+    except:
+        doc_data = {}
+    
+    # Create expandable section
+    with st.expander(f"Configure {title}", expanded=True):
+        # Prepare data for AgGrid
+        rows = []
         for name, cfg in params.items():
             # Get documentation for this parameter
             param_doc = doc_data.get("preprocessing_parameters", {}).get(name, {})
             
-            # Parameter name as expandable
-            with col1:
-                if param_doc:
-                    # Create expandable parameter name
-                    with st.expander(f"**{cfg.get('label', name)}** ⓘ", expanded=False):
-                        display_parameter_doc_sidebar(param_doc)
-                else:
-                    st.markdown(f"**{cfg.get('label', name)}**")
+            # Initialize session state for this parameter
+            val_key = f"aggrid_{title}_{name}_val"
+            ideal = cfg.get("ideal", "")
+            typ = cfg.get("type", "text")
             
-            # Description
-            with col2:
-                st.markdown(cfg.get("info", ""))
-            
-            # Value input
-            with col3:
-                val_key = f"preprocessing_{name}_val"
-                ideal = cfg.get("ideal", "")
-                typ = cfg.get("type", "text")
-                
-                # Initialize session state if not exists
-                if val_key not in st.session_state:
-                    if typ in ["number", "slider"]:
-                        st.session_state[val_key] = int(ideal) if str(ideal).isdigit() else 0
-                    elif typ == "checkbox":
-                        st.session_state[val_key] = bool(ideal)
-                    else:
-                        st.session_state[val_key] = ideal
-                
-                # Create appropriate widget
-                if typ in ("dropdown", "select") and cfg.get("options"):
-                    options = cfg["options"]
-                    val = st.session_state[val_key]
-                    idx = options.index(val) if val in options else 0
-                    value = st.selectbox(
-                        "", options, index=idx, key=val_key, label_visibility="collapsed"
-                    )
-                elif typ == "slider":
-                    minv = int(cfg.get("min_value", 0))
-                    maxv = int(cfg.get("max_value", 100))
-                    step = max(1, int(cfg.get("step", 1)))
-                    try:
-                        val = int(st.session_state[val_key])
-                    except Exception:
-                        val = minv
-                    
-                    if val < minv:
-                        val = minv
-                    elif val > maxv:
-                        val = maxv
-                    
-                    value = st.slider(
-                        "", min_value=minv, max_value=maxv, value=val, step=step, 
-                        key=val_key, label_visibility="collapsed"
-                    )
+            if val_key not in st.session_state:
+                if typ in ["number", "slider"]:
+                    st.session_state[val_key] = int(ideal) if str(ideal).isdigit() else 0
                 elif typ == "checkbox":
+                    st.session_state[val_key] = bool(ideal)
+                else:
+                    st.session_state[val_key] = ideal
+            
+            # Create row data
+            row = {
+                "Parameter": cfg.get("label", name),
+                "Description": cfg.get("info", ""),
+                "Type": typ,
+                "Ideal": ideal,
+                "Reason": cfg.get("ideal_value_reason", ""),
+                "Options": cfg.get("options", []),
+                "Min": cfg.get("min_value", 0),
+                "Max": cfg.get("max_value", 100),
+                "Step": cfg.get("step", 1),
+                "Value": st.session_state[val_key],
+                "Documentation": param_doc,
+                "ParamName": name,
+                "ValKey": val_key
+            }
+            rows.append(row)
+        
+        df = pd.DataFrame(rows)
+        
+        # Configure AgGrid with custom cell renderers
+        gb = GridOptionsBuilder.from_dataframe(df)
+        
+        # Configure columns
+        gb.configure_column("Parameter", width=200, pinned="left")
+        gb.configure_column("Description", width=300)
+        gb.configure_column("Type", width=100)
+        gb.configure_column("Ideal", width=100)
+        gb.configure_column("Reason", width=200)
+        
+        # Configure Value column with custom cell renderer
+        gb.configure_column(
+            "Value", 
+            width=150,
+            editable=True,
+            cellRenderer='agSelectCellEditor',
+            cellEditor='agSelectCellEditor'
+        )
+        
+        # Configure other columns
+        gb.configure_column("Options", width=150, hide=True)
+        gb.configure_column("Min", width=80, hide=True)
+        gb.configure_column("Max", width=80, hide=True)
+        gb.configure_column("Step", width=80, hide=True)
+        gb.configure_column("Documentation", hide=True)
+        gb.configure_column("ParamName", hide=True)
+        gb.configure_column("ValKey", hide=True)
+        
+        # Enable row selection
+        gb.configure_selection(selection_mode="single", use_checkbox=True)
+        
+        # Enable row grouping
+        gb.configure_grid_options(groupDefaultExpanded=1)
+        
+        grid_options = gb.build()
+        
+        # Display AgGrid
+        grid_response = AgGrid(
+            df,
+            gridOptions=grid_options,
+            update_mode=GridUpdateMode.VALUE_CHANGED,
+            allow_unsafe_jscode=True,
+            height=400,
+            fit_columns_on_grid_load=True,
+            key=f"aggrid_{title}"
+        )
+        
+        # Process selected rows and create interactive widgets
+        selected_rows = grid_response["selected_rows"]
+        if selected_rows:
+            st.markdown("---")
+            st.markdown("### Configure Selected Parameter")
+            
+            for row in selected_rows:
+                param_name = row["ParamName"]
+                param_doc = row["Documentation"]
+                val_key = row["ValKey"]
+                param_type = row["Type"]
+                options = row["Options"]
+                min_val = row["Min"]
+                max_val = row["Max"]
+                step = row["Step"]
+                
+                st.markdown(f"**{row['Parameter']}**")
+                st.markdown(f"*{row['Description']}*")
+                
+                # Create appropriate widget based on parameter type
+                if param_type == "checkbox":
                     value = st.checkbox(
-                        "", value=bool(st.session_state[val_key]), key=val_key, label_visibility="collapsed"
+                        "Enable",
+                        value=st.session_state[val_key],
+                        key=f"widget_{val_key}"
                     )
-                elif typ == "number":
-                    minv = int(cfg.get("min_value", 0))
-                    maxv = int(cfg.get("max_value", 100))
-                    step = max(1, int(cfg.get("step", 1)))
-                    try:
-                        val = int(st.session_state[val_key])
-                    except Exception:
-                        val = minv
-                    
-                    if val < minv:
-                        val = minv
-                    elif val > maxv:
-                        val = maxv
-                    
+                    st.session_state[val_key] = value
+                
+                elif param_type in ("dropdown", "select") and options:
+                    current_value = st.session_state[val_key]
+                    idx = options.index(current_value) if current_value in options else 0
+                    value = st.selectbox(
+                        "Select option:",
+                        options,
+                        index=idx,
+                        key=f"widget_{val_key}"
+                    )
+                    st.session_state[val_key] = value
+                
+                elif param_type == "slider":
+                    value = st.slider(
+                        "Adjust value:",
+                        min_value=min_val,
+                        max_value=max_val,
+                        value=st.session_state[val_key],
+                        step=step,
+                        key=f"widget_{val_key}"
+                    )
+                    st.session_state[val_key] = value
+                
+                elif param_type == "number":
                     value = st.number_input(
-                        "", min_value=minv, max_value=maxv, value=val, step=step, 
-                        key=val_key, label_visibility="collapsed"
+                        "Enter value:",
+                        min_value=min_val,
+                        max_value=max_val,
+                        value=st.session_state[val_key],
+                        step=step,
+                        key=f"widget_{val_key}"
                     )
+                    st.session_state[val_key] = value
+                
                 else:
                     value = st.text_input(
-                        "", value=str(st.session_state[val_key]), key=val_key, label_visibility="collapsed"
+                        "Enter value:",
+                        value=st.session_state[val_key],
+                        key=f"widget_{val_key}"
                     )
+                    st.session_state[val_key] = value
                 
-                param_values[name] = value
+                # Show documentation if available
+                if param_doc:
+                    with st.expander("📖 Parameter Documentation", expanded=False):
+                        display_parameter_doc_sidebar(param_doc)
+                
+                st.markdown(f"**Current Value:** `{st.session_state[val_key]}`")
         
+        # Show all current values
         st.markdown("---")
-        st.markdown(f"**Current Preprocessing Configuration:**")
-        st.json(param_values)
+        st.markdown("### Current Configuration")
+        current_values = {}
+        for name, cfg in params.items():
+            val_key = f"aggrid_{title}_{name}_val"
+            current_values[name] = st.session_state.get(val_key, cfg.get("ideal", ""))
         
-        return param_values
+        st.json(current_values)
+        
+        return current_values
+
+def create_preprocessing_table(params, task):
+    """
+    Create a special expandable table for preprocessing parameters with expandable parameter names for details and sliders/dropdowns for values
+    """
+    return create_aggrid_parameter_table(params, task, "Preprocessing Parameters")
 
 def display_parameter_help_below(task):
     """
