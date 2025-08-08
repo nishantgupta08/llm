@@ -7,7 +7,7 @@ from core.task_config import (
     get_available_tasks, get_task_param_blocks, get_task_parameters,
     get_task_description, get_task_icon
 )
-from utils.ui_utils import aggrid_model_picker, smart_param_table_with_reset, display_parameter_documentation
+from utils.ui_utils import aggrid_model_picker, smart_param_table_with_reset, display_parameter_help_sidebar
 
 # --- Load models from JSON
 config_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "config")
@@ -23,26 +23,17 @@ models_df = pd.DataFrame(all_models)
 st.set_page_config(page_title="🧠 GenAI Playground", layout="wide")
 st.title("🧠 GenAI Playground")
 
-# --- Sidebar with task selection and documentation ---
+# --- Sidebar with task selection ---
 with st.sidebar:
     st.markdown("## 🎯 Task Selection")
     tasks = get_available_tasks()
     task = st.selectbox("Choose Task", tasks)
-    
-    st.markdown("---")
-    st.markdown("## 📚 Documentation")
-    if st.button("📖 Parameter Documentation", help="View comprehensive parameter documentation"):
-        st.session_state.show_docs = True
-    
-    if st.button("🔙 Back to Main", help="Return to main interface"):
-        st.session_state.show_docs = False
 
-# --- Main content area ---
-if st.session_state.get('show_docs', False):
-    # Display parameter documentation
-    display_parameter_documentation()
-else:
-    # Display main interface
+# --- Main content area with two columns ---
+col1, col2 = st.columns([2, 1])
+
+with col1:
+    # Main interface
     st.markdown(f"### {get_task_icon(task)} {task}")
     st.write(get_task_description(task))
 
@@ -76,13 +67,19 @@ else:
             st.success(f"Selected encoder-decoder: {selected_encoder_decoder['name']}")
             st.write(selected_encoder_decoder)
 
-    # --- Editable parameter tables with AgGrid
+    # --- Editable parameter tables with AgGrid ---
     for block in get_task_param_blocks(task):
         param_type = f"{block}_parameters"
         params = get_task_parameters(task, param_type)
         if params:
             st.subheader(block.capitalize())
-            # param_values = smart_param_table(params, key=f"param_{block}")
             param_values = smart_param_table_with_reset(params, title=block.capitalize())
-
             st.write(f"Values for {block}:", param_values)
+
+with col2:
+    # Right sidebar for parameter documentation
+    st.markdown("## 📚 Parameter Help")
+    st.markdown("Select a parameter to see detailed documentation and recommendations.")
+    
+    # Show documentation for the current task's parameters
+    display_parameter_help_sidebar(task)

@@ -65,18 +65,14 @@ def smart_param_table_with_reset(param_dict, title="Parameters"):
         
         # Determine parameter type for documentation lookup
         param_type = "encoding"  # default
-        if "pooling" in name.lower() or title.lower() == "pooling":
-            param_type = "pooling"
-        elif title.lower() == "decoding":
+        if title.lower() == "decoding":
             param_type = "decoding"
         elif title.lower() == "preprocessing":
             param_type = "preprocessing"
         
         # Get documentation for this parameter
         param_doc = None
-        if param_type == "pooling":
-            param_doc = doc_data.get("pooling_strategies", {}).get(name, {})
-        elif param_type == "encoding":
+        if param_type == "encoding":
             param_doc = doc_data.get("encoding_parameters", {}).get(name, {})
         elif param_type == "decoding":
             param_doc = doc_data.get("decoding_parameters", {}).get(name, {})
@@ -345,53 +341,16 @@ def display_parameter_documentation():
     st.markdown("Comprehensive guide to all available parameters and their configurations.")
     
     # Create tabs for different parameter categories
-    tab1, tab2, tab3, tab4 = st.tabs(["🎯 Pooling Strategies", "🔧 Encoding Parameters", "🎲 Decoding Parameters", "📝 Preprocessing Parameters"])
+    tab1, tab2, tab3 = st.tabs(["🔧 Encoding Parameters", "🎲 Decoding Parameters", "📝 Preprocessing Parameters"])
     
     with tab1:
-        display_pooling_strategies(doc_data.get("pooling_strategies", {}))
-    
-    with tab2:
         display_encoding_parameters(doc_data.get("encoding_parameters", {}))
     
-    with tab3:
+    with tab2:
         display_decoding_parameters(doc_data.get("decoding_parameters", {}))
     
-    with tab4:
+    with tab3:
         display_preprocessing_parameters(doc_data.get("preprocessing_parameters", {}))
-
-def display_pooling_strategies(pooling_data):
-    """Display pooling strategies documentation"""
-    st.markdown("### Pooling Strategies")
-    st.markdown("Different methods to combine token embeddings into a single vector representation.")
-    
-    for strategy_key, strategy_info in pooling_data.items():
-        with st.expander(f"**{strategy_info.get('name', strategy_key)}** - {strategy_info.get('description', '')}"):
-            col1, col2 = st.columns([1, 1])
-            
-            with col1:
-                st.markdown("**Mathematical Definition:**")
-                st.code(strategy_info.get('mathematical_definition', 'N/A'), language='text')
-                
-                st.markdown("**Use Cases:**")
-                for use_case in strategy_info.get('use_cases', []):
-                    st.markdown(f"• {use_case}")
-                
-                st.markdown("**Advantages:**")
-                for advantage in strategy_info.get('advantages', []):
-                    st.markdown(f"✅ {advantage}")
-            
-            with col2:
-                st.markdown("**Disadvantages:**")
-                for disadvantage in strategy_info.get('disadvantages', []):
-                    st.markdown(f"❌ {disadvantage}")
-                
-                st.markdown("**Recommended For:**")
-                for rec in strategy_info.get('recommended_for', []):
-                    st.markdown(f"🎯 {rec}")
-                
-                st.markdown("**Not Recommended For:**")
-                for not_rec in strategy_info.get('not_recommended_for', []):
-                    st.markdown(f"⚠️ {not_rec}")
 
 def display_encoding_parameters(encoding_data):
     """Display encoding parameters documentation"""
@@ -412,12 +371,21 @@ def display_encoding_parameters(encoding_data):
                 for use_case in param_info['use_cases']:
                     st.markdown(f"• {use_case}")
             
-            # Handle options-based parameters
+            # Handle options-based parameters (including pooling strategies)
             if 'options' in param_info:
                 st.markdown("**Available Options:**")
                 for option_key, option_info in param_info['options'].items():
                     with st.expander(f"**{option_info.get('name', option_key)}**", expanded=False):
                         st.markdown(option_info.get('description', ''))
+                        
+                        if 'mathematical_definition' in option_info:
+                            st.markdown("**Mathematical Definition:**")
+                            st.code(option_info['mathematical_definition'], language='text')
+                        
+                        if 'use_cases' in option_info:
+                            st.markdown("**Use Cases:**")
+                            for use_case in option_info['use_cases']:
+                                st.markdown(f"• {use_case}")
                         
                         if 'advantages' in option_info:
                             st.markdown("**Advantages:**")
@@ -428,6 +396,16 @@ def display_encoding_parameters(encoding_data):
                             st.markdown("**Disadvantages:**")
                             for disadvantage in option_info['disadvantages']:
                                 st.markdown(f"❌ {disadvantage}")
+                        
+                        if 'recommended_for' in option_info:
+                            st.markdown("**Recommended For:**")
+                            for rec in option_info['recommended_for']:
+                                st.markdown(f"🎯 {rec}")
+                        
+                        if 'not_recommended_for' in option_info:
+                            st.markdown("**Not Recommended For:**")
+                            for not_rec in option_info['not_recommended_for']:
+                                st.markdown(f"⚠️ {not_rec}")
             
             # Display advantages/disadvantages for non-option parameters
             if 'advantages' in param_info and 'options' not in param_info:
@@ -613,9 +591,7 @@ def display_parameter_help_tooltip(param_name, param_type="encoding"):
         return ""
     
     # Get parameter info based on type
-    if param_type == "pooling":
-        param_info = doc_data.get("pooling_strategies", {}).get(param_name, {})
-    elif param_type == "encoding":
+    if param_type == "encoding":
         param_info = doc_data.get("encoding_parameters", {}).get(param_name, {})
     elif param_type == "decoding":
         param_info = doc_data.get("decoding_parameters", {}).get(param_name, {})
@@ -643,3 +619,189 @@ def display_parameter_help_tooltip(param_name, param_type="encoding"):
     """
     
     return tooltip_content
+
+def display_parameter_help_sidebar(task):
+    """
+    Display contextual parameter documentation in the right sidebar
+    """
+    # Load parameter documentation
+    config_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "config")
+    doc_path = os.path.join(config_dir, "parameter_documentation.json")
+    
+    try:
+        with open(doc_path, 'r', encoding='utf-8') as f:
+            doc_data = json.load(f)
+    except:
+        st.error("Could not load parameter documentation")
+        return
+
+    # Get task parameter blocks
+    from core.task_config import get_task_param_blocks, get_task_parameters
+    param_blocks = get_task_param_blocks(task)
+    
+    # Create tabs for different parameter categories
+    if param_blocks:
+        tab_names = [block.capitalize() for block in param_blocks]
+        tabs = st.tabs(tab_names)
+        
+        for i, block in enumerate(param_blocks):
+            with tabs[i]:
+                display_parameter_block_help(block, task, doc_data)
+
+def display_parameter_block_help(block, task, doc_data):
+    """
+    Display help for a specific parameter block
+    """
+    from core.task_config import get_task_parameters
+    
+    param_type = f"{block}_parameters"
+    params = get_task_parameters(task, param_type)
+    
+    if not params:
+        st.info("No parameters available for this section.")
+        return
+    
+    # Create a selectbox for parameter selection
+    param_names = list(params.keys())
+    param_labels = [params[name].get('label', name) for name in param_names]
+    
+    selected_param_label = st.selectbox(
+        "Choose a parameter:",
+        param_labels,
+        key=f"param_selector_{block}"
+    )
+    
+    # Find the selected parameter
+    selected_param_name = param_names[param_labels.index(selected_param_label)]
+    param_config = params[selected_param_name]
+    
+    # Get documentation for this parameter
+    param_doc = get_parameter_documentation(selected_param_name, block, doc_data)
+    
+    # Display parameter information
+    st.markdown(f"### {param_config.get('label', selected_param_name)}")
+    st.markdown(f"**Type:** {param_config.get('type', 'text')}")
+    
+    if param_config.get('info'):
+        st.markdown(f"**Description:** {param_config.get('info')}")
+    
+    # Display documentation if available
+    if param_doc:
+        display_parameter_doc_sidebar(param_doc)
+    else:
+        st.info("No detailed documentation available for this parameter.")
+    
+    # Show current value and recommendations
+    st.markdown("---")
+    st.markdown("### Current Configuration")
+    
+    # Show ideal value and reason
+    ideal_value = param_config.get('ideal', 'Not specified')
+    ideal_reason = param_config.get('ideal_value_reason', 'No reason provided')
+    
+    st.markdown(f"**Ideal Value:** `{ideal_value}`")
+    st.markdown(f"**Reason:** {ideal_reason}")
+    
+    # Show options if available
+    if param_config.get('options'):
+        st.markdown("**Available Options:**")
+        for option in param_config['options']:
+            st.markdown(f"• `{option}`")
+
+def get_parameter_documentation(param_name, block, doc_data):
+    """
+    Get documentation for a specific parameter
+    """
+    # Determine parameter category
+    if block.lower() in ['encoding', 'encoder']:
+        return doc_data.get("encoding_parameters", {}).get(param_name, {})
+    elif block.lower() in ['decoding', 'decoder']:
+        return doc_data.get("decoding_parameters", {}).get(param_name, {})
+    elif block.lower() in ['preprocessing', 'preprocess']:
+        return doc_data.get("preprocessing_parameters", {}).get(param_name, {})
+    else:
+        # Try all categories
+        for category in ["encoding_parameters", "decoding_parameters", "preprocessing_parameters"]:
+            doc = doc_data.get(category, {}).get(param_name, {})
+            if doc:
+                return doc
+    return {}
+
+def display_parameter_doc_sidebar(param_doc):
+    """
+    Display parameter documentation in a compact sidebar format
+    """
+    # Description
+    if param_doc.get('description'):
+        st.markdown(f"**Description:** {param_doc['description']}")
+    
+    # Mathematical definition
+    if param_doc.get('mathematical_definition'):
+        st.markdown("**Mathematical Definition:**")
+        st.code(param_doc['mathematical_definition'], language='text')
+    
+    # Use cases
+    if param_doc.get('use_cases'):
+        st.markdown("**Use Cases:**")
+        for use_case in param_doc['use_cases'][:3]:  # Show first 3
+            st.markdown(f"• {use_case}")
+        if len(param_doc['use_cases']) > 3:
+            st.markdown(f"*... and {len(param_doc['use_cases']) - 3} more*")
+    
+    # Options (for parameters with multiple options)
+    if param_doc.get('options'):
+        st.markdown("**Available Options:**")
+        for option_key, option_info in param_doc['options'].items():
+            with st.expander(f"**{option_info.get('name', option_key)}**", expanded=False):
+                st.markdown(option_info.get('description', ''))
+                
+                if option_info.get('advantages'):
+                    st.markdown("**Advantages:**")
+                    for advantage in option_info['advantages'][:2]:  # Show first 2
+                        st.markdown(f"✅ {advantage}")
+                
+                if option_info.get('disadvantages'):
+                    st.markdown("**Disadvantages:**")
+                    for disadvantage in option_info['disadvantages'][:2]:  # Show first 2
+                        st.markdown(f"❌ {disadvantage}")
+    
+    # Advantages and disadvantages
+    if param_doc.get('advantages'):
+        st.markdown("**Advantages:**")
+        if isinstance(param_doc['advantages'], dict):
+            for category, items in param_doc['advantages'].items():
+                st.markdown(f"**{category.title()}:**")
+                for item in items[:2]:  # Show first 2
+                    st.markdown(f"✅ {item}")
+        else:
+            for advantage in param_doc['advantages'][:3]:  # Show first 3
+                st.markdown(f"✅ {advantage}")
+    
+    if param_doc.get('disadvantages'):
+        st.markdown("**Disadvantages:**")
+        if isinstance(param_doc['disadvantages'], dict):
+            for category, items in param_doc['disadvantages'].items():
+                st.markdown(f"**{category.title()}:**")
+                for item in items[:2]:  # Show first 2
+                    st.markdown(f"❌ {item}")
+        else:
+            for disadvantage in param_doc['disadvantages'][:3]:  # Show first 3
+                st.markdown(f"❌ {disadvantage}")
+    
+    # Recommended values
+    if param_doc.get('recommended_values'):
+        st.markdown("**Recommended Values:**")
+        for category, values in param_doc['recommended_values'].items():
+            st.markdown(f"**{category.replace('_', ' ').title()}:** {values}")
+    
+    # Requirements
+    if param_doc.get('requirements'):
+        st.markdown("**Requirements:**")
+        for requirement in param_doc['requirements']:
+            st.markdown(f"🔧 {requirement}")
+    
+    # Operations (for preprocessing)
+    if param_doc.get('operations'):
+        st.markdown("**Operations:**")
+        for operation in param_doc['operations']:
+            st.markdown(f"🔧 {operation}")

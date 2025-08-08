@@ -1,177 +1,181 @@
 {
-  "pooling_strategies": {
-    "mean": {
-      "name": "Mean Pooling",
-      "description": "Takes the average of all token embeddings in the sequence",
-      "mathematical_definition": "output = (1/n) * Σ(token_embeddings)",
-      "use_cases": [
-        "Document similarity and retrieval",
-        "General-purpose embeddings",
-        "When you want balanced representation"
-      ],
-      "advantages": [
-        "Handles variable sequence lengths well",
-        "Provides balanced representation",
-        "Computationally efficient",
-        "Works well for most NLP tasks"
-      ],
-      "disadvantages": [
-        "May dilute important tokens",
-        "Can lose fine-grained information",
-        "Not optimal for classification tasks"
-      ],
-      "recommended_for": [
-        "Semantic search",
-        "Document clustering",
-        "General text embeddings"
-      ],
-      "not_recommended_for": [
-        "Classification tasks",
-        "When specific tokens are crucial"
-      ]
-    },
-    "max": {
-      "name": "Max Pooling",
-      "description": "Takes the element-wise maximum across all token embeddings",
-      "mathematical_definition": "output[i] = max(token_embeddings[:, i])",
-      "use_cases": [
-        "Sentiment analysis",
-        "Key phrase detection",
-        "Classification tasks"
-      ],
-      "advantages": [
-        "Preserves strongest features",
-        "Good for classification",
-        "Captures important signals"
-      ],
-      "disadvantages": [
-        "May lose context",
-        "Sensitive to outliers",
-        "Can ignore important but subtle features"
-      ],
-      "recommended_for": [
-        "Binary classification",
-        "Sentiment analysis",
-        "Feature extraction"
-      ],
-      "not_recommended_for": [
-        "Semantic similarity",
-        "When context matters"
-      ]
-    },
-    "cls": {
-      "name": "CLS Token Pooling",
-      "description": "Uses the [CLS] token embedding (classification token)",
-      "mathematical_definition": "output = cls_token_embedding",
-      "use_cases": [
-        "BERT/RoBERTa models",
-        "Classification tasks",
-        "Sentence-level tasks"
-      ],
-      "advantages": [
-        "Model-optimized for classification",
-        "Captures global context",
-        "Consistent representation"
-      ],
-      "disadvantages": [
-        "Only works with models that have CLS tokens",
-        "May not work with all architectures"
-      ],
-      "recommended_for": [
-        "BERT-based models",
-        "Classification tasks",
-        "Sentence-level embeddings"
-      ],
-      "not_recommended_for": [
-        "Non-BERT models",
-        "Token-level tasks"
-      ]
-    },
-    "sum": {
-      "name": "Sum Pooling",
-      "description": "Sums all token embeddings",
-      "mathematical_definition": "output = Σ(token_embeddings)",
-      "use_cases": [
-        "Short texts",
-        "When all tokens matter equally"
-      ],
-      "advantages": [
-        "Preserves all token contributions",
-        "Simple and fast"
-      ],
-      "disadvantages": [
-        "Sensitive to sequence length",
-        "May cause numerical overflow",
-        "Not normalized"
-      ],
-      "recommended_for": [
-        "Short sequences",
-        "When length is consistent"
-      ],
-      "not_recommended_for": [
-        "Variable length texts",
-        "Long sequences"
-      ]
-    },
-    "attention": {
-      "name": "Attention Pooling",
-      "description": "Weighted average using attention weights",
-      "mathematical_definition": "output = Σ(attention_weights * token_embeddings)",
-      "use_cases": [
-        "Question answering",
-        "When context matters",
-        "Complex reasoning tasks"
-      ],
-      "advantages": [
-        "Context-aware",
-        "Focuses on relevant parts",
-        "Interpretable"
-      ],
-      "disadvantages": [
-        "Computationally expensive",
-        "Requires attention mechanism",
-        "More complex"
-      ],
-      "recommended_for": [
-        "QA systems",
-        "When interpretability matters",
-        "Complex reasoning"
-      ],
-      "not_recommended_for": [
-        "Simple tasks",
-        "When speed is crucial"
-      ]
-    },
-    "last": {
-      "name": "Last Hidden State",
-      "description": "Uses the last hidden state from RNN/LSTM",
-      "mathematical_definition": "output = hidden_states[-1]",
-      "use_cases": [
-        "RNN/LSTM models",
-        "When sequence order matters"
-      ],
-      "advantages": [
-        "Captures sequential information",
-        "Simple implementation",
-        "Good for RNNs"
-      ],
-      "disadvantages": [
-        "May lose early context",
-        "Position-dependent",
-        "Not optimal for transformers"
-      ],
-      "recommended_for": [
-        "RNN/LSTM models",
-        "Sequential tasks",
-        "When order matters"
-      ],
-      "not_recommended_for": [
-        "Transformer models",
-        "When early context is important"
-      ]
-    }
-  },
   "encoding_parameters": {
+    "pooling": {
+      "name": "Pooling Strategy",
+      "description": "Different methods to combine token embeddings into a single vector representation",
+      "options": {
+        "mean": {
+          "name": "Mean Pooling",
+          "description": "Takes the average of all token embeddings in the sequence",
+          "mathematical_definition": "output = (1/n) * Σ(token_embeddings)",
+          "use_cases": [
+            "Document similarity and retrieval",
+            "General-purpose embeddings",
+            "When you want balanced representation"
+          ],
+          "advantages": [
+            "Handles variable sequence lengths well",
+            "Provides balanced representation",
+            "Computationally efficient",
+            "Works well for most NLP tasks"
+          ],
+          "disadvantages": [
+            "May dilute important tokens",
+            "Can lose fine-grained information",
+            "Not optimal for classification tasks"
+          ],
+          "recommended_for": [
+            "Semantic search",
+            "Document clustering",
+            "General text embeddings"
+          ],
+          "not_recommended_for": [
+            "Classification tasks",
+            "When specific tokens are crucial"
+          ]
+        },
+        "max": {
+          "name": "Max Pooling",
+          "description": "Takes the element-wise maximum across all token embeddings",
+          "mathematical_definition": "output[i] = max(token_embeddings[:, i])",
+          "use_cases": [
+            "Sentiment analysis",
+            "Key phrase detection",
+            "Classification tasks"
+          ],
+          "advantages": [
+            "Preserves strongest features",
+            "Good for classification",
+            "Captures important signals"
+          ],
+          "disadvantages": [
+            "May lose context",
+            "Sensitive to outliers",
+            "Can ignore important but subtle features"
+          ],
+          "recommended_for": [
+            "Binary classification",
+            "Sentiment analysis",
+            "Feature extraction"
+          ],
+          "not_recommended_for": [
+            "Semantic similarity",
+            "When context matters"
+          ]
+        },
+        "cls": {
+          "name": "CLS Token Pooling",
+          "description": "Uses the [CLS] token embedding (classification token)",
+          "mathematical_definition": "output = cls_token_embedding",
+          "use_cases": [
+            "BERT/RoBERTa models",
+            "Classification tasks",
+            "Sentence-level tasks"
+          ],
+          "advantages": [
+            "Model-optimized for classification",
+            "Captures global context",
+            "Consistent representation"
+          ],
+          "disadvantages": [
+            "Only works with models that have CLS tokens",
+            "May not work with all architectures"
+          ],
+          "recommended_for": [
+            "BERT-based models",
+            "Classification tasks",
+            "Sentence-level embeddings"
+          ],
+          "not_recommended_for": [
+            "Non-BERT models",
+            "Token-level tasks"
+          ]
+        },
+        "sum": {
+          "name": "Sum Pooling",
+          "description": "Sums all token embeddings",
+          "mathematical_definition": "output = Σ(token_embeddings)",
+          "use_cases": [
+            "Short texts",
+            "When all tokens matter equally"
+          ],
+          "advantages": [
+            "Preserves all token contributions",
+            "Simple and fast"
+          ],
+          "disadvantages": [
+            "Sensitive to sequence length",
+            "May cause numerical overflow",
+            "Not normalized"
+          ],
+          "recommended_for": [
+            "Short sequences",
+            "When length is consistent"
+          ],
+          "not_recommended_for": [
+            "Variable length texts",
+            "Long sequences"
+          ]
+        },
+        "attention": {
+          "name": "Attention Pooling",
+          "description": "Weighted average using attention weights",
+          "mathematical_definition": "output = Σ(attention_weights * token_embeddings)",
+          "use_cases": [
+            "Question answering",
+            "When context matters",
+            "Complex reasoning tasks"
+          ],
+          "advantages": [
+            "Context-aware",
+            "Focuses on relevant parts",
+            "Interpretable"
+          ],
+          "disadvantages": [
+            "Computationally expensive",
+            "Requires attention mechanism",
+            "More complex"
+          ],
+          "recommended_for": [
+            "QA systems",
+            "When interpretability matters",
+            "Complex reasoning"
+          ],
+          "not_recommended_for": [
+            "Simple tasks",
+            "When speed is crucial"
+          ]
+        },
+        "last": {
+          "name": "Last Hidden State",
+          "description": "Uses the last hidden state from RNN/LSTM",
+          "mathematical_definition": "output = hidden_states[-1]",
+          "use_cases": [
+            "RNN/LSTM models",
+            "When sequence order matters"
+          ],
+          "advantages": [
+            "Captures sequential information",
+            "Simple implementation",
+            "Good for RNNs"
+          ],
+          "disadvantages": [
+            "May lose early context",
+            "Position-dependent",
+            "Not optimal for transformers"
+          ],
+          "recommended_for": [
+            "RNN/LSTM models",
+            "Sequential tasks",
+            "When order matters"
+          ],
+          "not_recommended_for": [
+            "Transformer models",
+            "When early context is important"
+          ]
+        }
+      }
+    },
     "normalize": {
       "name": "Normalization Methods",
       "description": "Different methods to normalize embeddings for better similarity calculations",
