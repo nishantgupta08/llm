@@ -4,6 +4,18 @@ from st_aggrid import AgGrid, GridOptionsBuilder, GridUpdateMode
 import json
 import os
 
+def ensure_slider_types(min_val, max_val, step, current_val):
+    """
+    Ensure consistent types for slider widget parameters
+    Returns tuple of (min_val, max_val, step, current_val) with consistent types
+    """
+    if isinstance(step, float) or any(isinstance(x, float) for x in [min_val, max_val, current_val]):
+        # Convert all to float if any is float
+        return float(min_val), float(max_val), float(step), float(current_val)
+    else:
+        # Convert all to int if all are integers
+        return int(min_val), int(max_val), int(step), int(current_val)
+
 def aggrid_model_picker(models_df, key="aggrid_model_picker"):
     """Show models as a single-select AgGrid table. Returns the selected row as dict or None."""
     gb = GridOptionsBuilder.from_dataframe(models_df)
@@ -307,11 +319,14 @@ def create_preprocessing_table(params, task):
                     max_val = cfg.get("max_value", 100)
                     step = cfg.get("step", 1)
                     
+                    # Ensure consistent types for slider
+                    min_val, max_val, step, current_val = ensure_slider_types(min_val, max_val, step, st.session_state[val_key])
+                    
                     value = st.slider(
                         "Adjust value:",
                         min_value=min_val,
                         max_value=max_val,
-                        value=st.session_state[val_key],
+                        value=current_val,
                         step=step,
                         key=f"widget_{val_key}"
                     )
@@ -324,11 +339,14 @@ def create_preprocessing_table(params, task):
                     max_val = cfg.get("max_value", 100)
                     step = cfg.get("step", 1)
                     
+                    # Ensure consistent types for number input
+                    min_val, max_val, step, current_val = ensure_slider_types(min_val, max_val, step, st.session_state[val_key])
+                    
                     value = st.number_input(
                         "Enter value:",
                         min_value=min_val,
                         max_value=max_val,
-                        value=st.session_state[val_key],
+                        value=current_val,
                         step=step,
                         key=f"widget_{val_key}"
                     )
@@ -452,11 +470,14 @@ def create_encoding_table(params, task):
                     max_val = cfg.get("max_value", 100)
                     step = cfg.get("step", 1)
                     
+                    # Ensure consistent types for slider
+                    min_val, max_val, step, current_val = ensure_slider_types(min_val, max_val, step, st.session_state[val_key])
+                    
                     value = st.slider(
                         "Adjust value:",
                         min_value=min_val,
                         max_value=max_val,
-                        value=st.session_state[val_key],
+                        value=current_val,
                         step=step,
                         key=f"widget_{val_key}"
                     )
@@ -469,11 +490,14 @@ def create_encoding_table(params, task):
                     max_val = cfg.get("max_value", 100)
                     step = cfg.get("step", 1)
                     
+                    # Ensure consistent types for number input
+                    min_val, max_val, step, current_val = ensure_slider_types(min_val, max_val, step, st.session_state[val_key])
+                    
                     value = st.number_input(
                         "Enter value:",
                         min_value=min_val,
                         max_value=max_val,
-                        value=st.session_state[val_key],
+                        value=current_val,
                         step=step,
                         key=f"widget_{val_key}"
                     )
@@ -597,11 +621,14 @@ def create_decoding_table(params, task):
                     max_val = cfg.get("max_value", 100)
                     step = cfg.get("step", 1)
                     
+                    # Ensure consistent types for slider
+                    min_val, max_val, step, current_val = ensure_slider_types(min_val, max_val, step, st.session_state[val_key])
+                    
                     value = st.slider(
                         "Adjust value:",
                         min_value=min_val,
                         max_value=max_val,
-                        value=st.session_state[val_key],
+                        value=current_val,
                         step=step,
                         key=f"widget_{val_key}"
                     )
@@ -614,11 +641,14 @@ def create_decoding_table(params, task):
                     max_val = cfg.get("max_value", 100)
                     step = cfg.get("step", 1)
                     
+                    # Ensure consistent types for number input
+                    min_val, max_val, step, current_val = ensure_slider_types(min_val, max_val, step, st.session_state[val_key])
+                    
                     value = st.number_input(
                         "Enter value:",
                         min_value=min_val,
                         max_value=max_val,
-                        value=st.session_state[val_key],
+                        value=current_val,
                         step=step,
                         key=f"widget_{val_key}"
                     )
