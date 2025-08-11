@@ -7,7 +7,7 @@ from core.task_config import (
     get_available_tasks, get_task_param_blocks, get_task_parameters,
     get_task_description, get_task_icon
 )
-from utils.ui_utils import aggrid_model_picker, create_preprocessing_table, create_encoding_table, create_decoding_table
+from utils.ui import aggrid_model_picker, create_preprocessing_table, create_encoding_table, create_decoding_table
 
 # --- Load models from JSON
 config_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "config")
