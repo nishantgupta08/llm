@@ -315,9 +315,9 @@ def create_preprocessing_table(params, task):
                 
                 elif typ == "slider":
                     # Slider for numeric ranges
-                    min_val = cfg.get("min_value", 0)
-                    max_val = cfg.get("max_value", 100)
-                    step = cfg.get("step", 1)
+                    min_val = cfg.get("min", 0)  # Use "min" from config
+                    max_val = cfg.get("max", 100)  # Use "max" from config
+                    step = cfg.get("step", 1)  # Use "step" from config
                     
                     # Ensure consistent types for slider
                     min_val, max_val, step, current_val = ensure_slider_types(min_val, max_val, step, st.session_state[val_key])
@@ -335,9 +335,9 @@ def create_preprocessing_table(params, task):
                 
                 elif typ == "number":
                     # Number input for specific values
-                    min_val = cfg.get("min_value", 0)
-                    max_val = cfg.get("max_value", 100)
-                    step = cfg.get("step", 1)
+                    min_val = cfg.get("min", 0)  # Use "min" from config
+                    max_val = cfg.get("max", 100)  # Use "max" from config
+                    step = cfg.get("step", 1)  # Use "step" from config
                     
                     # Ensure consistent types for number input
                     min_val, max_val, step, current_val = ensure_slider_types(min_val, max_val, step, st.session_state[val_key])
@@ -466,9 +466,9 @@ def create_encoding_table(params, task):
                 
                 elif typ == "slider":
                     # Slider for numeric ranges
-                    min_val = cfg.get("min_value", 0)
-                    max_val = cfg.get("max_value", 100)
-                    step = cfg.get("step", 1)
+                    min_val = cfg.get("min", 0)  # Use "min" from config
+                    max_val = cfg.get("max", 100)  # Use "max" from config
+                    step = cfg.get("step", 1)  # Use "step" from config
                     
                     # Ensure consistent types for slider
                     min_val, max_val, step, current_val = ensure_slider_types(min_val, max_val, step, st.session_state[val_key])
@@ -486,9 +486,9 @@ def create_encoding_table(params, task):
                 
                 elif typ == "number":
                     # Number input for specific values
-                    min_val = cfg.get("min_value", 0)
-                    max_val = cfg.get("max_value", 100)
-                    step = cfg.get("step", 1)
+                    min_val = cfg.get("min", 0)  # Use "min" from config
+                    max_val = cfg.get("max", 100)  # Use "max" from config
+                    step = cfg.get("step", 1)  # Use "step" from config
                     
                     # Ensure consistent types for number input
                     min_val, max_val, step, current_val = ensure_slider_types(min_val, max_val, step, st.session_state[val_key])
@@ -617,9 +617,9 @@ def create_decoding_table(params, task):
                 
                 elif typ == "slider":
                     # Slider for numeric ranges
-                    min_val = cfg.get("min_value", 0)
-                    max_val = cfg.get("max_value", 100)
-                    step = cfg.get("step", 1)
+                    min_val = cfg.get("min", 0)  # Use "min" from config
+                    max_val = cfg.get("max", 100)  # Use "max" from config
+                    step = cfg.get("step", 1)  # Use "step" from config
                     
                     # Ensure consistent types for slider
                     min_val, max_val, step, current_val = ensure_slider_types(min_val, max_val, step, st.session_state[val_key])
@@ -637,9 +637,9 @@ def create_decoding_table(params, task):
                 
                 elif typ == "number":
                     # Number input for specific values
-                    min_val = cfg.get("min_value", 0)
-                    max_val = cfg.get("max_value", 100)
-                    step = cfg.get("step", 1)
+                    min_val = cfg.get("min", 0)  # Use "min" from config
+                    max_val = cfg.get("max", 100)  # Use "max" from config
+                    step = cfg.get("step", 1)  # Use "step" from config
                     
                     # Ensure consistent types for number input
                     min_val, max_val, step, current_val = ensure_slider_types(min_val, max_val, step, st.session_state[val_key])

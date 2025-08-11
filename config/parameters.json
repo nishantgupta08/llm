@@ -5,51 +5,7 @@
       "type": "dropdown",
       "value_type": "str",
       "options": ["mean", "max", "cls", "sum", "attention", "last"],
-      "info": "How to pool token embeddings into a single vector representation.",
-      "detailed_info": {
-        "mean": {
-          "description": "Average of all token embeddings",
-          "use_case": "General purpose, good for most tasks",
-          "pros": "Balanced representation, handles variable lengths well",
-          "cons": "May dilute important tokens",
-          "example": "Best for: document similarity, general embeddings"
-        },
-        "max": {
-          "description": "Element-wise maximum across all tokens",
-          "use_case": "When you want to capture the strongest signals",
-          "pros": "Preserves strongest features, good for classification",
-          "cons": "May lose context, sensitive to outliers",
-          "example": "Best for: sentiment analysis, key phrase detection"
-        },
-        "cls": {
-          "description": "Use the [CLS] token embedding (BERT-style)",
-          "use_case": "BERT/Transformer models with classification tokens",
-          "pros": "Model-optimized, captures global context",
-          "cons": "Only works with models that have CLS tokens",
-          "example": "Best for: BERT, RoBERTa, classification tasks"
-        },
-        "sum": {
-          "description": "Sum of all token embeddings",
-          "use_case": "When you need to preserve all information",
-          "pros": "Preserves all token contributions",
-          "cons": "Sensitive to sequence length, may overflow",
-          "example": "Best for: short texts, when all tokens matter equally"
-        },
-        "attention": {
-          "description": "Weighted average using attention weights",
-          "use_case": "When you want to focus on important tokens",
-          "pros": "Context-aware, focuses on relevant parts",
-          "cons": "Computationally expensive, requires attention mechanism",
-          "example": "Best for: question answering, when context matters"
-        },
-        "last": {
-          "description": "Use the last hidden state",
-          "use_case": "RNN/LSTM models or when order matters",
-          "pros": "Captures sequential information, simple",
-          "cons": "May lose early context, position-dependent",
-          "example": "Best for: RNNs, when sequence order is important"
-        }
-      }
+      "info": "How to pool token embeddings into a single vector representation."
     },
     "normalize": {
       "label": "Normalize Embeddings",
