@@ -430,7 +430,7 @@ def create_encoding_table(params, task):
                         key=f"radio_{val_key}"
                     )
                     st.session_state[val_key] = selected_option
-                    param_values[name] = value
+                    param_values[name] = selected_option
                     
                     # Show details for selected option if documentation available
                     if param_doc and param_doc.get('options') and selected_option in param_doc['options']:
