@@ -117,10 +117,28 @@ class TaskOrchestrator:
             print("No documents retrieved for the query.")
         
         # Step 3: Generate answer using the retrieved context
+        if not context or context.strip() == "" or context == "No relevant documents found.":
+            print("Context is empty or no relevant documents found. Aborting generation.")
+            return "No relevant context could be retrieved from the document. Please check your PDF or try a different query."
+
+        if not query or query.strip() == "":
+            print("Query is empty. Aborting generation.")
+            return "Query is empty. Please enter a valid question."
+
+        # Provide a default prompt if none is given
+        if not prompt or prompt.strip() == "":
+            prompt = "Please answer the following question based on the provided context."
+
         full_prompt = f"{prompt}\n\nContext:\n{context}\n\nQuestion: {query}\n\nAnswer:"
         print(f"Full prompt length: {len(full_prompt)} characters")
-        answer = decoder_instance.run(full_prompt)
-        
+        print(f"Full prompt preview: {full_prompt[:500]}")  # Print first 500 chars for debugging
+
+        try:
+            answer = decoder_instance.run(full_prompt)
+        except Exception as e:
+            print(f"Decoder failed: {e}")
+            return f"Text generation failed: {e}"
+
         return answer
 
     def run_qa(

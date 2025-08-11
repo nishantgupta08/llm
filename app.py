@@ -74,9 +74,7 @@ if task == "RAG-based QA":
         else:
             with st.spinner("Running RAG-based QA..."):
                 from core.task_orchestrator import TaskOrchestrator
-                # Load model config (already loaded as models_json)
                 orchestrator = TaskOrchestrator(models_json)
-                # You may want to collect encoding/decoding/preprocessing params from UI as well
                 answer = orchestrator.run_rag_qa(
                     file=uploaded_pdf,
                     encoder_name=selected_encoder['name'],
