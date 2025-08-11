@@ -7,7 +7,7 @@ from core.task_config import (
     get_available_tasks, get_task_param_blocks, get_task_parameters,
     get_task_description, get_task_icon
 )
-from utils.ui_utils import aggrid_model_picker, smart_param_table_with_reset, create_preprocessing_table
+from utils.ui_utils import aggrid_model_picker, create_preprocessing_table, create_encoding_table, create_decoding_table
 
 # --- Load models from JSON
 config_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "config")
@@ -67,30 +67,30 @@ elif task in ("Normal QA", "Summarisation"):
 st.markdown("---")
 st.markdown("## ⚙️ Parameter Configuration")
 
-# --- Toggle buttons for parameter sections ---
-col1, col2, col3 = st.columns(3)
-with col1:
-    show_encoding = st.checkbox("🔧 Show Encoding Parameters", value=False, key="show_encoding")
-with col2:
-    show_decoding = st.checkbox("🎲 Show Decoding Parameters", value=False, key="show_decoding")
-with col3:
-    show_preprocessing = st.checkbox("📝 Show Preprocessing Parameters", value=True, key="show_preprocessing")
-
-# --- Parameter tables based on toggles ---
-for block in get_task_param_blocks(task):
-    param_type = f"{block}_parameters"
-    params = get_task_parameters(task, param_type)
+# --- Parameter configuration tabs ---
+param_blocks = get_task_param_blocks(task)
+if param_blocks:
+    tab_names = []
+    for block in param_blocks:
+        if block.lower() == "encoding":
+            tab_names.append("🔧 Encoding")
+        elif block.lower() == "decoding":
+            tab_names.append("🎲 Decoding")
+        elif block.lower() == "preprocessing":
+            tab_names.append("📝 Preprocessing")
     
-    if params:
-        if block.lower() == "encoding" and show_encoding:
-            st.subheader("🔧 Encoding Parameters")
-            param_values = smart_param_table_with_reset(params, title="Encoding")
-            st.write(f"Values for encoding:", param_values)
+    if tab_names:
+        tabs = st.tabs(tab_names)
+        
+        for i, block in enumerate(param_blocks):
+            param_type = f"{block}_parameters"
+            params = get_task_parameters(task, param_type)
             
-        elif block.lower() == "decoding" and show_decoding:
-            st.subheader("🎲 Decoding Parameters")
-            param_values = smart_param_table_with_reset(params, title="Decoding")
-            st.write(f"Values for decoding:", param_values)
-            
-        elif block.lower() == "preprocessing" and show_preprocessing:
-            create_preprocessing_table(params, task)
+            if params:
+                with tabs[i]:
+                    if block.lower() == "encoding":
+                        create_encoding_table(params, task)
+                    elif block.lower() == "decoding":
+                        create_decoding_table(params, task)
+                    elif block.lower() == "preprocessing":
+                        create_preprocessing_table(params, task)
