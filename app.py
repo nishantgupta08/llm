@@ -55,6 +55,41 @@ if task == "RAG-based QA":
         st.success(f"Selected decoder: {selected_decoder['name']}")
         st.write(selected_decoder)
 
+    # --- Query input and PDF upload ---
+    from utils.ui.display import query_input_box, pdf_upload_widget
+    st.markdown("---")
+    st.subheader("User Query and Document Upload")
+    user_query = query_input_box()
+    uploaded_pdf = pdf_upload_widget()
+
+    # --- Run button ---
+    run_clicked = st.button("Run RAG QA")
+    if run_clicked:
+        if not (selected_encoder and selected_decoder):
+            st.error("Please select both an encoder and a decoder model.")
+        elif not user_query:
+            st.error("Please enter a query.")
+        elif not uploaded_pdf:
+            st.error("Please upload a PDF document.")
+        else:
+            with st.spinner("Running RAG-based QA..."):
+                from core.task_orchestrator import TaskOrchestrator
+                # Load model config (already loaded as models_json)
+                orchestrator = TaskOrchestrator(models_json)
+                # You may want to collect encoding/decoding/preprocessing params from UI as well
+                answer = orchestrator.run_rag_qa(
+                    file=uploaded_pdf,
+                    encoder_name=selected_encoder['name'],
+                    decoder_name=selected_decoder['name'],
+                    prompt="",  # You may want to add a prompt input
+                    query=user_query,
+                    encoding_params=None,
+                    decoding_params=None,
+                    preprocessing_config=None
+                )
+                st.success("Answer:")
+                st.write(answer)
+
 elif task in ("Normal QA", "Summarisation"):
     st.subheader("Select an Encoder-Decoder Model")
     encoder_decoder_df = pd.DataFrame(encoder_decoder_models)

@@ -70,3 +70,13 @@ def display_parameter_doc_sidebar(param_doc):
     st.markdown("---")
     st.markdown("**Parameter Configuration:**")
 
+
+def query_input_box(label="Enter your query:", key="user_query"):
+    """Renders a text area for user queries and returns the input string."""
+    return st.text_area(label, key=key)
+
+
+def pdf_upload_widget(label="Upload a PDF file", key="pdf_upload"):
+    """Renders a file uploader for PDF files and returns the uploaded file object."""
+    return st.file_uploader(label, type=["pdf"], key=key)
+
