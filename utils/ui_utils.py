@@ -1137,9 +1137,148 @@ def create_aggrid_parameter_table(params, task, title="Parameters"):
 
 def create_preprocessing_table(params, task):
     """
-    Create a special expandable table for preprocessing parameters with expandable parameter names for details and sliders/dropdowns for values
+    Create a simple expandable table for preprocessing parameters with expandable parameter names for details and sliders/dropdowns for values
     """
-    return create_aggrid_parameter_table(params, task, "Preprocessing Parameters")
+    st.subheader("📝 Preprocessing Parameters")
+    
+    with st.expander("Configure Preprocessing Parameters", expanded=True):
+        # Load parameter documentation for tooltips
+        config_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "config")
+        doc_path = os.path.join(config_dir, "parameter_documentation.json")
+        
+        try:
+            with open(doc_path, 'r', encoding='utf-8') as f:
+                doc_data = json.load(f)
+        except:
+            doc_data = {}
+        
+        param_values = {}
+        
+        for name, cfg in params.items():
+            # Get documentation for this parameter
+            param_doc = doc_data.get("preprocessing_parameters", {}).get(name, {})
+            
+            # Create expandable section for each parameter
+            with st.expander(f"**{cfg.get('label', name)}** - {cfg.get('info', '')}", expanded=False):
+                
+                # Show parameter description
+                st.markdown(f"**Description:** {cfg.get('info', '')}")
+                
+                # Show documentation if available
+                if param_doc:
+                    with st.expander("📖 Parameter Documentation", expanded=False):
+                        display_parameter_doc_sidebar(param_doc)
+                
+                # Create appropriate widgets based on parameter type
+                val_key = f"preprocessing_{name}_val"
+                ideal = cfg.get("ideal", "")
+                typ = cfg.get("type", "text")
+                options = cfg.get("options", [])
+                
+                # Initialize session state if not exists
+                if val_key not in st.session_state:
+                    if typ in ["number", "slider"]:
+                        st.session_state[val_key] = int(ideal) if str(ideal).isdigit() else 0
+                    elif typ == "checkbox":
+                        st.session_state[val_key] = bool(ideal)
+                    else:
+                        st.session_state[val_key] = ideal
+                
+                if typ == "checkbox":
+                    # Single checkbox for boolean parameters
+                    value = st.checkbox(
+                        "Enable",
+                        value=st.session_state[val_key],
+                        key=f"widget_{val_key}"
+                    )
+                    st.session_state[val_key] = value
+                    param_values[name] = value
+                
+                elif typ in ("dropdown", "select") and options:
+                    # Radio buttons for option selection
+                    st.markdown("**Select Option:**")
+                    selected_option = st.radio(
+                        "Choose an option:",
+                        options,
+                        index=options.index(st.session_state[val_key]) if st.session_state[val_key] in options else 0,
+                        key=f"radio_{val_key}"
+                    )
+                    st.session_state[val_key] = selected_option
+                    param_values[name] = selected_option
+                    
+                    # Show details for selected option if documentation available
+                    if param_doc and param_doc.get('options') and selected_option in param_doc['options']:
+                        option_doc = param_doc['options'][selected_option]
+                        with st.expander(f"Details for {selected_option}", expanded=False):
+                            st.markdown(option_doc.get('description', ''))
+                            if option_doc.get('advantages'):
+                                st.markdown("**Advantages:**")
+                                for advantage in option_doc['advantages']:
+                                    st.markdown(f"✅ {advantage}")
+                            if option_doc.get('disadvantages'):
+                                st.markdown("**Disadvantages:**")
+                                for disadvantage in option_doc['disadvantages']:
+                                    st.markdown(f"❌ {disadvantage}")
+                
+                elif typ == "slider":
+                    # Slider for numeric ranges
+                    min_val = cfg.get("min_value", 0)
+                    max_val = cfg.get("max_value", 100)
+                    step = cfg.get("step", 1)
+                    
+                    value = st.slider(
+                        "Adjust value:",
+                        min_value=min_val,
+                        max_value=max_val,
+                        value=st.session_state[val_key],
+                        step=step,
+                        key=f"widget_{val_key}"
+                    )
+                    st.session_state[val_key] = value
+                    param_values[name] = value
+                
+                elif typ == "number":
+                    # Number input for specific values
+                    min_val = cfg.get("min_value", 0)
+                    max_val = cfg.get("max_value", 100)
+                    step = cfg.get("step", 1)
+                    
+                    value = st.number_input(
+                        "Enter value:",
+                        min_value=min_val,
+                        max_value=max_val,
+                        value=st.session_state[val_key],
+                        step=step,
+                        key=f"widget_{val_key}"
+                    )
+                    st.session_state[val_key] = value
+                    param_values[name] = value
+                
+                else:
+                    # Text input for other types
+                    value = st.text_input(
+                        "Enter value:",
+                        value=st.session_state[val_key],
+                        key=f"widget_{val_key}"
+                    )
+                    st.session_state[val_key] = value
+                    param_values[name] = value
+                
+                # Show current value
+                st.markdown(f"**Current Value:** `{st.session_state[val_key]}`")
+                
+                # Show ideal value and reason
+                ideal_value = cfg.get("ideal", "Not specified")
+                ideal_reason = cfg.get("ideal_value_reason", "No reason provided")
+                st.markdown(f"**Ideal Value:** `{ideal_value}`")
+                st.markdown(f"**Reason:** {ideal_reason}")
+        
+        # Show all current values
+        st.markdown("---")
+        st.markdown("### Current Configuration")
+        st.json(param_values)
+        
+        return param_values
 
 def display_parameter_help_below(task):
     """

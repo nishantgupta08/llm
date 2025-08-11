@@ -7,7 +7,7 @@ from core.task_config import (
     get_available_tasks, get_task_param_blocks, get_task_parameters,
     get_task_description, get_task_icon
 )
-from utils.ui_utils import aggrid_model_picker, smart_param_table_with_reset, display_parameter_help_below, create_preprocessing_table
+from utils.ui_utils import aggrid_model_picker, create_preprocessing_table
 
 # --- Load models from JSON
 config_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "config")
@@ -67,20 +67,9 @@ elif task in ("Normal QA", "Summarisation"):
 st.markdown("---")
 st.markdown("## ⚙️ Parameter Configuration")
 
-# --- Editable parameter tables with AgGrid ---
+# --- Preprocessing parameters only ---
 for block in get_task_param_blocks(task):
     param_type = f"{block}_parameters"
     params = get_task_parameters(task, param_type)
-    if params:
-        if block.lower() == "preprocessing":
-            # Special expandable table for preprocessing parameters
-            create_preprocessing_table(params, task)
-        else:
-            # Regular parameter table for other blocks
-            st.subheader(block.capitalize())
-            param_values = smart_param_table_with_reset(params, title=block.capitalize())
-            st.write(f"Values for {block}:", param_values)
-
-# --- Parameter documentation section below ---
-st.markdown("---")
-display_parameter_help_below(task)
+    if params and block.lower() == "preprocessing":
+        create_preprocessing_table(params, task)
