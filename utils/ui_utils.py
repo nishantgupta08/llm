@@ -271,7 +271,12 @@ def create_preprocessing_table(params, task):
                 # Initialize session state if not exists
                 if val_key not in st.session_state:
                     if typ in ["number", "slider"]:
-                        st.session_state[val_key] = int(ideal) if str(ideal).isdigit() else 0
+                        # Use ideal value if available, otherwise use min value, fallback to 0
+                        if str(ideal).isdigit():
+                            st.session_state[val_key] = int(ideal)
+                        else:
+                            min_val = cfg.get("min", 0)
+                            st.session_state[val_key] = min_val
                     elif typ == "checkbox":
                         st.session_state[val_key] = bool(ideal)
                     else:
@@ -422,7 +427,12 @@ def create_encoding_table(params, task):
                 # Initialize session state if not exists
                 if val_key not in st.session_state:
                     if typ in ["number", "slider"]:
-                        st.session_state[val_key] = int(ideal) if str(ideal).isdigit() else 0
+                        # Use ideal value if available, otherwise use min value, fallback to 0
+                        if str(ideal).isdigit():
+                            st.session_state[val_key] = int(ideal)
+                        else:
+                            min_val = cfg.get("min", 0)
+                            st.session_state[val_key] = min_val
                     elif typ == "checkbox":
                         st.session_state[val_key] = bool(ideal)
                     else:
@@ -573,7 +583,12 @@ def create_decoding_table(params, task):
                 # Initialize session state if not exists
                 if val_key not in st.session_state:
                     if typ in ["number", "slider"]:
-                        st.session_state[val_key] = int(ideal) if str(ideal).isdigit() else 0
+                        # Use ideal value if available, otherwise use min value, fallback to 0
+                        if str(ideal).isdigit():
+                            st.session_state[val_key] = int(ideal)
+                        else:
+                            min_val = cfg.get("min", 0)
+                            st.session_state[val_key] = min_val
                     elif typ == "checkbox":
                         st.session_state[val_key] = bool(ideal)
                     else:
