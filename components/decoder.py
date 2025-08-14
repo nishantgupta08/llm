@@ -25,6 +25,10 @@ class LangchainDecoder:
         # Filter out unsupported parameters
         filtered_params = self._filter_supported_params(self.decoding_params)
 
+        # Debug logging
+        print(f"Debug: Original decoding params: {self.decoding_params}")
+        print(f"Debug: Filtered params for pipeline: {filtered_params}")
+
         try:
             self.pipeline = pipeline(
                 task="text-generation",
@@ -62,6 +66,16 @@ class LangchainDecoder:
                 filtered[key] = value
             else:
                 unsupported.append(key)
+        
+        # Prioritize max_new_tokens over max_length if both are present
+        if 'max_new_tokens' in filtered and 'max_length' in filtered:
+            print("Warning: Both max_new_tokens and max_length are set. Using max_new_tokens and ignoring max_length.")
+            del filtered['max_length']
+        
+        # Set default max_new_tokens if no length parameter is specified
+        if 'max_new_tokens' not in filtered and 'max_length' not in filtered:
+            filtered['max_new_tokens'] = 512
+            print("Info: No length parameter specified. Using default max_new_tokens=512.")
         
         if unsupported:
             print(f"Warning: The following parameters are not supported by the text-generation pipeline and will be ignored: {unsupported}")

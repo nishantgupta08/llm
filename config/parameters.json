@@ -151,10 +151,19 @@
       "label": "Max Output Length",
       "type": "slider",
       "value_type": "int",
-      "min": 16,
+      "min": 100,
       "max": 4096,
       "step": 8,
-      "info": "Maximum number of tokens to generate."
+      "info": "Maximum total length (input + output tokens). Use max_new_tokens for generation control."
+    },
+    "max_new_tokens": {
+      "label": "Max New Tokens",
+      "type": "slider",
+      "value_type": "int",
+      "min": 16,
+      "max": 2048,
+      "step": 8,
+      "info": "Maximum number of new tokens to generate (recommended over max_length)."
     },
     "min_length": {
       "label": "Min Output Length",
@@ -322,3 +331,4 @@
     }
   }
 }
+
