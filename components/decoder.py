@@ -22,14 +22,51 @@ class LangchainDecoder:
         self.model_name = model_name
         self.decoding_params = decoding_params or {}
 
+        # Filter out unsupported parameters
+        filtered_params = self._filter_supported_params(self.decoding_params)
+
         try:
             self.pipeline = pipeline(
                 task="text-generation",
                 model=self.model_name,
-                **self.decoding_params
+                **filtered_params
             )
         except Exception as e:
             raise RuntimeError(f"Failed to initialize HuggingFace pipeline: {e}")
+
+    def _filter_supported_params(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Filter out parameters that are not supported by HuggingFace text-generation pipeline.
+        
+        Args:
+            params (dict): All decoding parameters
+            
+        Returns:
+            dict: Filtered parameters that are supported by the pipeline
+        """
+        # Standard parameters supported by most text-generation models
+        supported_params = {
+            'temperature', 'top_p', 'top_k', 'repetition_penalty', 'length_penalty',
+            'no_repeat_ngram_size', 'max_new_tokens', 'min_length', 'max_length',
+            'num_beams', 'early_stopping', 'do_sample', 'typical_p', 'penalty_alpha',
+            'pad_token_id', 'eos_token_id', 'bos_token_id', 'unk_token_id',
+            'attention_mask', 'use_cache', 'return_dict_in_generate'
+        }
+        
+        # Filter parameters
+        filtered = {}
+        unsupported = []
+        
+        for key, value in params.items():
+            if key in supported_params:
+                filtered[key] = value
+            else:
+                unsupported.append(key)
+        
+        if unsupported:
+            print(f"Warning: The following parameters are not supported by the text-generation pipeline and will be ignored: {unsupported}")
+        
+        return filtered
 
     def run(self, prompt: str) -> str:
         """
