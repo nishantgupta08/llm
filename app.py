@@ -40,7 +40,12 @@ encoder_decoder_models = [m for m in models_json.get('ENCODER_DECODER_MODELS', [
 
 selected_encoder = selected_decoder = selected_encoder_decoder = None
 
-if task == "RAG-based QA":
+# Get task configuration dynamically
+task_blocks = get_task_param_blocks(task)
+
+# --- Model selection based on task blocks ---
+if "encoding" in task_blocks and "decoding" in task_blocks:
+    # Tasks that need separate encoder and decoder (like RAG-based QA)
     st.subheader("Select an Encoder Model")
     encoder_df = pd.DataFrame(encoder_models)
     selected_encoder = aggrid_model_picker(encoder_df, key="aggrid_encoder_model_picker")
@@ -54,15 +59,72 @@ if task == "RAG-based QA":
     if selected_decoder:
         st.success(f"Selected decoder: {selected_decoder['name']}")
         st.write(selected_decoder)
+else:
+    # Tasks that use encoder-decoder models (like Normal QA and Summarisation)
+    st.subheader("Select an Encoder-Decoder Model")
+    encoder_decoder_df = pd.DataFrame(encoder_decoder_models)
+    selected_encoder_decoder = aggrid_model_picker(encoder_decoder_df, key="aggrid_encoder_decoder_model_picker")
+    if selected_encoder_decoder:
+        st.success(f"Selected encoder-decoder: {selected_encoder_decoder['name']}")
+        st.write(selected_encoder_decoder)
 
-    # --- Query input and PDF upload ---
-    from utils.ui.display import query_input_box, pdf_upload_widget
-    st.markdown("---")
+# --- Parameter configuration section ---
+st.markdown("---")
+st.markdown("## ⚙️ Parameter Configuration")
+
+# --- Parameter configuration tabs ---
+if task_blocks:
+    tab_names = []
+    for block in task_blocks:
+        if block.lower() == "encoding":
+            tab_names.append("🔧 Encoding")
+        elif block.lower() == "decoding":
+            tab_names.append("🎲 Decoding")
+        elif block.lower() == "preprocessing":
+            tab_names.append("📝 Preprocessing")
+    
+    if tab_names:
+        tabs = st.tabs(tab_names)
+        
+        for i, block in enumerate(task_blocks):
+            param_type = f"{block}_parameters"
+            params = get_task_parameters(task, param_type)
+            
+            if params:
+                with tabs[i]:
+                    if block.lower() == "encoding":
+                        encoding_params = create_encoding_table(params, task)
+                    elif block.lower() == "decoding":
+                        decoding_params = create_decoding_table(params, task)
+                    elif block.lower() == "preprocessing":
+                        preprocessing_params = create_preprocessing_table(params, task)
+
+# --- Task-specific input and execution ---
+from utils.ui.display import query_input_box
+st.markdown("---")
+
+# Dynamic task execution based on task configuration
+def execute_task(task_name, **kwargs):
+    """Execute the selected task with the given parameters."""
+    from core.task_orchestrator import TaskOrchestrator
+    orchestrator = TaskOrchestrator(models_json)
+    
+    if task_name == "RAG-based QA":
+        return orchestrator.run_rag_qa(**kwargs)
+    elif task_name == "Normal QA":
+        return orchestrator.run_qa(**kwargs)
+    elif task_name == "Summarisation":
+        return orchestrator.run_summarisation(**kwargs)
+    else:
+        raise ValueError(f"Unknown task: {task_name}")
+
+# Task-specific input widgets and execution
+if task == "RAG-based QA":
+    from utils.ui.display import pdf_upload_widget
     st.subheader("User Query and Document Upload")
     user_query = query_input_box()
     uploaded_pdf = pdf_upload_widget()
-
-    # --- Run button ---
+    
     run_clicked = st.button("Run RAG QA")
     if run_clicked:
         if not (selected_encoder and selected_decoder):
@@ -73,145 +135,62 @@ if task == "RAG-based QA":
             st.error("Please upload a PDF document.")
         else:
             with st.spinner("Running RAG-based QA..."):
-                from core.task_orchestrator import TaskOrchestrator
-                orchestrator = TaskOrchestrator(models_json)
-                answer = orchestrator.run_rag_qa(
-                    file=uploaded_pdf,
-                    encoder_name=selected_encoder['name'],
-                    decoder_name=selected_decoder['name'],
-                    prompt="",  # You may want to add a prompt input
-                    query=user_query,
-                    encoding_params=None,
-                    decoding_params=None,
-                    preprocessing_config=None
-                )
+                kwargs = {
+                    "file": uploaded_pdf,
+                    "encoder_name": selected_encoder['name'],
+                    "decoder_name": selected_decoder['name'],
+                    "prompt": "",
+                    "query": user_query,
+                    "encoding_params": encoding_params if 'encoding_params' in locals() else {},
+                    "decoding_params": decoding_params if 'decoding_params' in locals() else {},
+                    "preprocessing_config": preprocessing_params if 'preprocessing_params' in locals() else {}
+                }
+                answer = execute_task(task, **kwargs)
                 st.success("Answer:")
                 st.write(answer)
 
-elif task in ("Normal QA", "Summarisation"):
-    st.subheader("Select an Encoder-Decoder Model")
-    encoder_decoder_df = pd.DataFrame(encoder_decoder_models)
-    selected_encoder_decoder = aggrid_model_picker(encoder_decoder_df, key="aggrid_encoder_decoder_model_picker")
-    if selected_encoder_decoder:
-        st.success(f"Selected encoder-decoder: {selected_encoder_decoder['name']}")
-        st.write(selected_encoder_decoder)
-
-    # --- Parameter configuration section ---
-    st.markdown("---")
-    st.markdown("## ⚙️ Parameter Configuration")
-
-    # --- Parameter configuration tabs ---
-    param_blocks = get_task_param_blocks(task)
-    if param_blocks:
-        tab_names = []
-        for block in param_blocks:
-            if block.lower() == "encoding":
-                tab_names.append("🔧 Encoding")
-            elif block.lower() == "decoding":
-                tab_names.append("🎲 Decoding")
-            elif block.lower() == "preprocessing":
-                tab_names.append("📝 Preprocessing")
-        
-        if tab_names:
-            tabs = st.tabs(tab_names)
-            
-            for i, block in enumerate(param_blocks):
-                param_type = f"{block}_parameters"
-                params = get_task_parameters(task, param_type)
-                
-                if params:
-                    with tabs[i]:
-                        if block.lower() == "encoding":
-                            encoding_params = create_encoding_table(params, task)
-                        elif block.lower() == "decoding":
-                            decoding_params = create_decoding_table(params, task)
-                        elif block.lower() == "preprocessing":
-                            preprocessing_params = create_preprocessing_table(params, task)
-
-    # --- Task-specific input and execution ---
-    from utils.ui.display import query_input_box
-    st.markdown("---")
+elif task == "Normal QA":
+    st.subheader("User Query")
+    user_query = query_input_box(label="Enter your question:", key="qa_query")
     
-    if task == "Normal QA":
-        st.subheader("User Query")
-        user_query = query_input_box(label="Enter your question:", key="qa_query")
-        
-        # --- Run button for Normal QA ---
-        run_clicked = st.button("Run Normal QA")
-        if run_clicked:
-            if not selected_encoder_decoder:
-                st.error("Please select an encoder-decoder model.")
-            elif not user_query:
-                st.error("Please enter a question.")
-            else:
-                with st.spinner("Running Normal QA..."):
-                    from core.task_orchestrator import TaskOrchestrator
-                    orchestrator = TaskOrchestrator(models_json)
-                    answer = orchestrator.run_qa(
-                        model_name=selected_encoder_decoder['name'],
-                        query=user_query,
-                        encoding_params=encoding_params if 'encoding_params' in locals() else {},
-                        decoding_params=decoding_params if 'decoding_params' in locals() else {},
-                        preprocessing_config=preprocessing_params if 'preprocessing_params' in locals() else {}
-                    )
-                    st.success("Answer:")
-                    st.write(answer)
+    run_clicked = st.button("Run Normal QA")
+    if run_clicked:
+        if not selected_encoder_decoder:
+            st.error("Please select an encoder-decoder model.")
+        elif not user_query:
+            st.error("Please enter a question.")
+        else:
+            with st.spinner("Running Normal QA..."):
+                kwargs = {
+                    "model_name": selected_encoder_decoder['name'],
+                    "query": user_query,
+                    "encoding_params": encoding_params if 'encoding_params' in locals() else {},
+                    "decoding_params": decoding_params if 'decoding_params' in locals() else {},
+                    "preprocessing_config": preprocessing_params if 'preprocessing_params' in locals() else {}
+                }
+                answer = execute_task(task, **kwargs)
+                st.success("Answer:")
+                st.write(answer)
+
+elif task == "Summarisation":
+    st.subheader("Text to Summarize")
+    input_text = query_input_box(label="Enter text to summarize:", key="summarize_text")
     
-    elif task == "Summarisation":
-        st.subheader("Text to Summarize")
-        input_text = query_input_box(label="Enter text to summarize:", key="summarize_text")
-        
-        # --- Run button for Summarisation ---
-        run_clicked = st.button("Run Summarisation")
-        if run_clicked:
-            if not selected_encoder_decoder:
-                st.error("Please select an encoder-decoder model.")
-            elif not input_text:
-                st.error("Please enter text to summarize.")
-            else:
-                with st.spinner("Running Summarisation..."):
-                    from core.task_orchestrator import TaskOrchestrator
-                    orchestrator = TaskOrchestrator(models_json)
-                    summary = orchestrator.run_summarisation(
-                        model_name=selected_encoder_decoder['name'],
-                        input_text=input_text,
-                        encoding_params=encoding_params if 'encoding_params' in locals() else {},
-                        decoding_params=decoding_params if 'decoding_params' in locals() else {},
-                        preprocessing_config=preprocessing_params if 'preprocessing_params' in locals() else {}
-                    )
-                    st.success("Summary:")
-                    st.write(summary)
-
-    # --- Query input and PDF upload for RAG ---
-    if task == "RAG-based QA":
-        from utils.ui.display import query_input_box, pdf_upload_widget
-        st.markdown("---")
-        st.subheader("User Query and Document Upload")
-        user_query = query_input_box()
-        uploaded_pdf = pdf_upload_widget()
-
-        # --- Run button for RAG QA ---
-        run_clicked = st.button("Run RAG QA")
-        if run_clicked:
-            if not (selected_encoder and selected_decoder):
-                st.error("Please select both an encoder and a decoder model.")
-            elif not user_query:
-                st.error("Please enter a query.")
-            elif not uploaded_pdf:
-                st.error("Please upload a PDF document.")
-            else:
-                with st.spinner("Running RAG-based QA..."):
-                    from core.task_orchestrator import TaskOrchestrator
-                    orchestrator = TaskOrchestrator(models_json)
-                    answer = orchestrator.run_rag_qa(
-                        file=uploaded_pdf,
-                        encoder_name=selected_encoder['name'],
-                        decoder_name=selected_decoder['name'],
-                        prompt="",  # You may want to add a prompt input
-                        query=user_query,
-                        encoding_params=encoding_params if 'encoding_params' in locals() else {},
-                        decoding_params=decoding_params if 'decoding_params' in locals() else {},
-                        preprocessing_config=preprocessing_params if 'preprocessing_params' in locals() else {}
-                    )
-                    st.success("Answer:")
-                    st.write(answer)
+    run_clicked = st.button("Run Summarisation")
+    if run_clicked:
+        if not selected_encoder_decoder:
+            st.error("Please select an encoder-decoder model.")
+        elif not input_text:
+            st.error("Please enter text to summarize.")
+        else:
+            with st.spinner("Running Summarisation..."):
+                kwargs = {
+                    "model_name": selected_encoder_decoder['name'],
+                    "input_text": input_text,
+                    "encoding_params": encoding_params if 'encoding_params' in locals() else {},
+                    "decoding_params": decoding_params if 'decoding_params' in locals() else {},
+                    "preprocessing_config": preprocessing_params if 'preprocessing_params' in locals() else {}
+                }
+                summary = execute_task(task, **kwargs)
+                st.success("Summary:")
+                st.write(summary)
