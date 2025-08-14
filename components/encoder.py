@@ -38,9 +38,12 @@ class LangchainEncoder:
         self.pooling = self.encoding_params["pooling"]
         self.normalization = self.encoding_params["normalize"]
         self.layer = self.encoding_params["layer"]
-        self.device = self.encoding_params["device"]
+        
+        # Handle 'auto' device parameter
+        device_param = self.encoding_params["device"]
+        self.device = self._resolve_device(device_param)
 
-        allowed_normalizations = {"none", "l2", "l1", "max", "zscore", "minmax"}
+        allowed_normalizations = {"none", "l1", "l2", "max", "zscore", "minmax"}
         if self.normalization not in allowed_normalizations:
             raise ValueError(f"Unsupported normalization: '{self.normalization}'")
 
@@ -72,6 +75,32 @@ class LangchainEncoder:
             except Exception as e:
                 # If device placement fails, continue with default device
                 print(f"Warning: Could not move model to {self.device}: {e}")
+
+    def _resolve_device(self, device_param: str) -> str:
+        """
+        Resolve device parameter to a valid PyTorch device.
+        
+        Args:
+            device_param (str): Device parameter from config ('auto', 'cpu', 'cuda', 'mps')
+            
+        Returns:
+            str: Valid PyTorch device string
+        """
+        if device_param == "auto":
+            if torch.cuda.is_available():
+                return "cuda"
+            elif hasattr(torch.backends, 'mps') and torch.backends.mps.is_available():
+                return "mps"
+            else:
+                return "cpu"
+        elif device_param == "cuda" and not torch.cuda.is_available():
+            print("Warning: CUDA requested but not available, falling back to CPU")
+            return "cpu"
+        elif device_param == "mps" and (not hasattr(torch.backends, 'mps') or not torch.backends.mps.is_available()):
+            print("Warning: MPS requested but not available, falling back to CPU")
+            return "cpu"
+        else:
+            return device_param
 
     def _apply_normalization(self, embeddings: List[List[float]]) -> List[List[float]]:
         if self.normalization == "none":
