@@ -93,9 +93,23 @@ if task_blocks:
             if params:
                 with tabs[i]:
                     if block.lower() == "encoding":
-                        encoding_params = create_encoding_table(params, task)
+                        # Pass appropriate model name based on task
+                        if task == "RAG-based QA" and selected_encoder:
+                            model_name = selected_encoder['name']
+                        elif selected_encoder_decoder:
+                            model_name = selected_encoder_decoder['name']
+                        else:
+                            model_name = None
+                        encoding_params = create_encoding_table(params, task, model_name)
                     elif block.lower() == "decoding":
-                        decoding_params = create_decoding_table(params, task)
+                        # Pass appropriate model name based on task
+                        if task == "RAG-based QA" and selected_decoder:
+                            model_name = selected_decoder['name']
+                        elif selected_encoder_decoder:
+                            model_name = selected_encoder_decoder['name']
+                        else:
+                            model_name = None
+                        decoding_params = create_decoding_table(params, task, model_name)
                     elif block.lower() == "preprocessing":
                         preprocessing_params = create_preprocessing_table(params, task)
 

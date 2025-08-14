@@ -65,7 +65,7 @@ def _render_param_block(name, cfg, param_doc, val_key, title_prefix):
             return value
 
 
-def create_preprocessing_table(params, task):
+def create_preprocessing_table(params, task, model_name=None):
     st.subheader("📝 Preprocessing Parameters")
     with st.expander("Configure Preprocessing Parameters", expanded=True):
         doc_data = _load_doc()
@@ -82,8 +82,23 @@ def create_preprocessing_table(params, task):
         return param_values
 
 
-def create_encoding_table(params, task):
+def create_encoding_table(params, task, model_name=None):
     st.subheader("🔧 Encoding Parameters")
+    
+    # Filter parameters based on selected model
+    if model_name:
+        try:
+            from components.encoder import LangchainEncoder
+            supported_params = LangchainEncoder.get_supported_parameters(model_name)
+            filtered_params = {k: v for k, v in params.items() if k in supported_params}
+            
+            if len(filtered_params) != len(params):
+                unsupported = set(params.keys()) - supported_params
+                st.info(f"⚠️ The following parameters are not supported by {model_name} and are hidden: {', '.join(unsupported)}")
+                params = filtered_params
+        except Exception as e:
+            st.warning(f"Could not determine supported parameters for {model_name}: {e}")
+    
     with st.expander("Configure Encoding Parameters", expanded=True):
         doc_data = _load_doc()
         param_values = {}
@@ -99,8 +114,23 @@ def create_encoding_table(params, task):
         return param_values
 
 
-def create_decoding_table(params, task):
+def create_decoding_table(params, task, model_name=None):
     st.subheader("🎲 Decoding Parameters")
+    
+    # Filter parameters based on selected model
+    if model_name:
+        try:
+            from components.decoder import LangchainDecoder
+            supported_params = LangchainDecoder.get_supported_parameters(model_name)
+            filtered_params = {k: v for k, v in params.items() if k in supported_params}
+            
+            if len(filtered_params) != len(params):
+                unsupported = set(params.keys()) - supported_params
+                st.info(f"⚠️ The following parameters are not supported by {model_name} and are hidden: {', '.join(unsupported)}")
+                params = filtered_params
+        except Exception as e:
+            st.warning(f"Could not determine supported parameters for {model_name}: {e}")
+    
     with st.expander("Configure Decoding Parameters", expanded=True):
         doc_data = _load_doc()
         param_values = {}

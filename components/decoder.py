@@ -68,6 +68,40 @@ class LangchainDecoder:
         
         return filtered
 
+    @staticmethod
+    def get_supported_parameters(model_name: str) -> set:
+        """
+        Get the set of supported parameters for a specific model.
+        
+        Args:
+            model_name (str): HuggingFace model name or path
+            
+        Returns:
+            set: Set of supported parameter names
+        """
+        # Standard parameters supported by most text-generation models
+        base_supported = {
+            'temperature', 'top_p', 'top_k', 'repetition_penalty', 'length_penalty',
+            'no_repeat_ngram_size', 'max_new_tokens', 'min_length', 'max_length',
+            'num_beams', 'early_stopping', 'do_sample', 'typical_p', 'penalty_alpha',
+            'pad_token_id', 'eos_token_id', 'bos_token_id', 'unk_token_id',
+            'attention_mask', 'use_cache', 'return_dict_in_generate'
+        }
+        
+        # Model-specific parameter support (can be extended based on model type)
+        model_lower = model_name.lower()
+        
+        # GPT-style models typically support more parameters
+        if any(gpt_type in model_lower for gpt_type in ['gpt', 'llama', 'mistral', 'falcon']):
+            return base_supported | {'top_a', 'temperature_decay'}
+        
+        # BERT-style models have more limited generation parameters
+        elif any(bert_type in model_lower for bert_type in ['bert', 'roberta', 'distilbert']):
+            return {'max_new_tokens', 'do_sample', 'temperature', 'top_p', 'top_k'}
+        
+        # Default to base supported parameters
+        return base_supported
+
     def run(self, prompt: str) -> str:
         """
         Generate text for a given prompt using the pipeline.

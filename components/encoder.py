@@ -102,6 +102,37 @@ class LangchainEncoder:
         else:
             return device_param
 
+    @staticmethod
+    def get_supported_parameters(model_name: str) -> set:
+        """
+        Get the set of supported parameters for a specific encoder model.
+        
+        Args:
+            model_name (str): HuggingFace model name or path
+            
+        Returns:
+            set: Set of supported parameter names
+        """
+        # Standard parameters supported by most embedding models
+        base_supported = {
+            'pooling', 'normalize', 'device', 'batch_size', 'max_length',
+            'truncation', 'stride', 'special_tokens', 'return_tensors'
+        }
+        
+        # Model-specific parameter support
+        model_lower = model_name.lower()
+        
+        # BERT-style models support more parameters
+        if any(bert_type in model_lower for bert_type in ['bert', 'roberta', 'distilbert']):
+            return base_supported | {'tokenizer', 'output_hidden_states', 'aggregation'}
+        
+        # Sentence transformers typically support fewer parameters
+        elif any(st_type in model_lower for st_type in ['sentence-transformers', 'all-mpnet', 'all-minilm']):
+            return {'device', 'batch_size', 'normalize'}
+        
+        # Default to base supported parameters
+        return base_supported
+
     def _apply_normalization(self, embeddings: List[List[float]]) -> List[List[float]]:
         if self.normalization == "none":
             return embeddings
