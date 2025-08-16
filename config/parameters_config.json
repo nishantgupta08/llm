@@ -1,0 +1,121 @@
+{
+  "encoding_parameters": {
+    "pooling": {
+      "name": "Pooling Strategy",
+      "label": "Pooling Strategy",
+      "type": "dropdown",
+      "value_type": "str",
+      "options": [
+        "mean",
+        "max",
+        "cls",
+        "sum",
+        "attention",
+        "last"
+      ],
+      "description": "Different methods to combine token embeddings into a single vector representation",
+      "info": "How to pool token embeddings into a single vector representation.",
+      "options_details": {
+        "mean": {
+          "name": "Mean Pooling",
+          "description": "Takes the average of all token embeddings in the sequence",
+          "mathematical_definition": "output = (1/n) * Σ(token_embeddings)",
+          "use_cases": [
+            "Document similarity and retrieval",
+            "General-purpose embeddings"
+          ],
+          "advantages": [
+            "Handles variable sequence lengths well",
+            "Computationally efficient"
+          ],
+          "disadvantages": [
+            "Dilutes important tokens"
+          ]
+        },
+        "max": {
+          "name": "Max Pooling",
+          "description": "Takes the element-wise maximum across all token embeddings",
+          "mathematical_definition": "output[i] = max(token_embeddings[:, i])",
+          "use_cases": [
+            "Sentiment analysis",
+            "Classification tasks"
+          ],
+          "advantages": [
+            "Preserves strongest features"
+          ],
+          "disadvantages": [
+            "Sensitive to outliers"
+          ]
+        }
+      }
+    },
+    "normalize": {
+      "name": "Normalization Methods",
+      "label": "Normalize Embeddings",
+      "type": "dropdown",
+      "value_type": "str",
+      "options": [
+        "l1",
+        "l2",
+        "none",
+        "z-score",
+        "min-max"
+      ],
+      "description": "Different methods to normalize embeddings for better similarity calculations",
+      "info": "Apply normalization to output embeddings. Recommended for cosine similarity."
+    }
+  },
+  "decoding_parameters": {
+    "temperature": {
+      "name": "Temperature",
+      "label": "Temperature",
+      "type": "slider",
+      "value_type": "float",
+      "min": 0.0,
+      "max": 2.0,
+      "step": 0.01,
+      "description": "Controls randomness in token selection. Higher values make output more random/creative",
+      "info": "Controls randomness. Higher = more diverse/creative."
+    },
+    "top_k": {
+      "name": "Top-K Sampling",
+      "label": "Top-K",
+      "type": "slider",
+      "value_type": "int",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "description": "Sample only from the top K most likely tokens at each step",
+      "info": "Sample from top K tokens. 0 disables."
+    }
+  },
+  "preprocessing_parameters": {
+    "splitter_type": {
+      "name": "Text Splitter Type",
+      "label": "Text Splitter",
+      "type": "dropdown",
+      "value_type": "str",
+      "options": [
+        "recursive",
+        "character",
+        "token",
+        "sentence",
+        "paragraph",
+        "custom"
+      ],
+      "description": "Different strategies for splitting long documents into chunks",
+      "info": "How to chunk the text. 'recursive' adapts to structure, 'sentence' for natural language."
+    },
+    "chunk_size": {
+      "name": "Chunk Size",
+      "label": "Chunk Size",
+      "type": "number",
+      "value_type": "int",
+      "min": 100,
+      "max": 10000,
+      "step": 100,
+      "description": "Target size for each text chunk (in characters or tokens)",
+      "info": "Size (in characters/tokens) for each text chunk."
+    }
+  }
+}
